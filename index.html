@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LOOKOPTICS 가상착용</title>
+<script>
+// 진입 파일: 실제 앱(app.html)을 매번 새 주소로 열어 캐시를 원천 차단
+(function(){
+  var u=new URL('app.html',location.href);
+  var q=new URLSearchParams(location.search); q.forEach(function(v,k){u.searchParams.set(k,v);});
+  u.searchParams.set('v',Date.now());
+  location.replace(u.toString());
+})();
+</script>
+</head><body style="font-family:sans-serif;padding:24px;color:#666">여는 중…<br><a id="l" href="app.html">바로 열기</a>
+<script>document.getElementById('l').href='app.html?v='+Date.now();</script>
+</body></html>
