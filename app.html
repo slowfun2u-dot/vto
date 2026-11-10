@@ -3820,10 +3820,10 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.3.0";
+const APP_VERSION="v2.3.1";
 const CATALOG={
   'LK-S001':{name:'스퀘어 아세테이트 선글라스',price:'89,000원',size:[50,20,145],img:'assets/LK-S001/thumb.jpg',glb:'assets/LK-S001/model.glb',
-    fit:{faceWidthMm:140, up:-16, fwd:14}, lens:{tint:[0.391,0.385,0.417], reflect:1.0},
+    fit:{faceWidthMm:153, up:-16, fwd:14}, lens:{tint:[0.391,0.385,0.417], reflect:1.0},
     // 사진에서 측정: 프레임 베이스 컬러(sRGB), 유광도. pattern=true 이면 사진 투영 텍스처 사용
     frame:{baseColor:[0.12, 0.12, 0.125], gloss:1.0, pattern:false},
     ao:{Front:'assets/LK-S001/ao_front.png',Temple_L:'assets/LK-S001/ao_temple_l.png',Temple_R:'assets/LK-S001/ao_temple_r.png'},
@@ -4117,7 +4117,7 @@ function onFace(r){
  if(!lm||lm.length<468){validFace=false;faceLm=null;if(calibration)calibration.samples=[];return;}
  const width=V(lm[234]).distanceTo(V(lm[454])),height=V(lm[10]).distanceTo(V(lm[152]));
  if(!Number.isFinite(width)||width<vw*.10||width>vw*.9||height<vh*.13){validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
- const scaleM=(faceWidthCal||P.fit.faceWidthMm||CANON_W)/CANON_W;
+ const scaleM=(faceWidthCal||P.fit.faceWidthMm||CANON_W)/CANON_W;settings._scaleM=scaleM;
  const sol=solvePnP(lm,focalPx,scaleM,pnp&&t-lastSeen<600?pnp:null);
  if(!sol.R.every(Number.isFinite)||!sol.T.every(Number.isFinite)||sol.rms>width*.08){pnp=null;validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
  pnp=sol;const R=sol.R,T=sol.T;
@@ -4175,7 +4175,7 @@ function applyPose(t){
  glasses.updateMatrixWorld(true);
  updatePartVisibility();
  const u=postQuad.material.uniforms;u.uFace.value=clamp(1-(age-hold)/130,0,1);
- [[-25,-24,-9],[25,-24,-9],[0,-7,-9]].forEach((a,i)=>{const p=new THREE.Vector3(...a).multiplyScalar(.001).applyMatrix4(glasses.matrixWorld).project(cam);const w=(i===2?9:21)*pose.px/vw,h=(i===2?7:8)*pose.px/vh;u.uShadows.value[i].set(p.x*.5+.5,p.y*.5+.5,w,h);});
+ [[-25,-24,-9],[25,-24,-9]].forEach((a,i)=>{const p=new THREE.Vector3(...a).multiplyScalar(.001).applyMatrix4(glasses.matrixWorld).project(cam);const w=21*pose.px/vw,h=8*pose.px/vh;u.uShadows.value[i].set(p.x*.5+.5,p.y*.5+.5,w,h);});u.uShadows.value[2].set(-2,-2,1,1);
 }
 function estimateLight(t){
  if(t-lastLight<400||!faceLm||video.readyState<2)return;lastLight=t;
@@ -4213,7 +4213,7 @@ function loop(t=performance.now(),token=session){
   else{glasses.visible=true;for(const m of materials)if(m.userData.trackUniforms)m.userData.trackUniforms.trackOpacity.value=1;if(!dragging&&t-(loop.lastDrag||0)>2500)previewYaw+=dt*.00007;glasses.quaternion.setFromEuler(new THREE.Euler(previewPitch,previewYaw,0,'YXZ'));glasses.position.set(0,0,30);glasses.scale.setScalar(1000);faceOcc.visible=headOcc.visible=false;}
   renderFrame();
   if(t-lastQuality>2500&&mode==='ar'){lastQuality=t;let next=renderRatio;if(frameDt>42)next=Math.max(.65,renderRatio-.15);else if(frameDt<24)next=Math.min(1.25,renderRatio+.1);if(Math.abs(next-renderRatio)>.01){renderRatio=next;resizeRender();}}
-  if(t-lastUI>500){lastUI=t;$('qualityBadge').textContent=mode==='preview'?'3D 제품 보기 · 드래그해서 회전':faceWidthCal?'크기 보정 적용':'스타일 체험 · 크기 추정';$('perfStatus').textContent=DEBUG?Math.round(1000/frameDt)+' fps · '+glc.width+'×'+glc.height+(pose?' · z '+Math.round(-pnp.T[2])+'mm · rms '+pose.rms.toFixed(1):''):'';}
+  if(t-lastUI>500){lastUI=t;$('qualityBadge').textContent=mode==='preview'?'3D 제품 보기 · 드래그해서 회전':faceWidthCal?'크기 보정 적용':'스타일 체험 · 크기 추정';$('perfStatus').textContent=DEBUG?Math.round(1000/frameDt)+' fps · '+glc.width+'×'+glc.height+(pose?' · z '+Math.round(-pnp.T[2])+'mm · rms '+pose.rms.toFixed(1)+' · W '+Math.round(settings._scaleM*CANON_W)+(faceWidthCal?'cal':'def'):''):'';}
  }catch(e){stopAR();errorUI(new Error('화면 처리 중 오류가 발생했습니다. 다시 열어주세요. '+e.message));return;}
  raf=requestAnimationFrame(t=>loop(t,token));
 }

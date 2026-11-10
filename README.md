@@ -1,4 +1,4 @@
-# LOOKOPTICS AR v2.3.0
+# LOOKOPTICS AR v2.3.1
 
 v2.1 리뷰의 보완 항목을 반영한 최종본. 구조(세션 토큰·추론 watchdog·sRGB 색 파이프라인·468점 오클루더·RGBE 환경맵·재질 JSON)는 v2.1 그대로 유지.
 
@@ -10,6 +10,10 @@ assets/LK-S001/         SKU별 자산
   model.glb  thumb.jpg  ao_front.png  ao_temple_l.png  ao_temple_r.png  front_tex.jpg  pad_l.png  pad_r.png
 ```
 GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래그 가능). 새 SKU는 `assets/<SKU>/` 폴더와 `CATALOG` 항목 하나를 추가하면 된다.
+
+## v2.3.1
+- 브릿지 하단 접촉 그림자 제거(코 중앙 어두워짐). 렌즈 하단 2개만 유지
+- 기본 얼굴폭 140→153mm(정준 모델 실폭). 140은 이전 2D 측정 기준값이라 새 구조에서는 안경이 커 보임
 
 ## v2.3 변경 — 자세 추정 교체 (좌우 회전 시 뜨는 현상)
 - 얼굴 자세: 랜드마크 z 추정값 + 뺨/이마 축 → **MediaPipe 정준 얼굴 모델(468점, mm) + PnP**(가우스-뉴턴, 코시 가중). 2D 랜드마크만 사용하므로 깊이 추정 오차가 자세에 들어가지 않음
