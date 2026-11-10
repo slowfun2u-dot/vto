@@ -154,7 +154,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 <p>얼굴 윤곽을 유지하며 피부결과 톤을 보정합니다. 제품 색은 별도로 처리합니다.</p>
 <div class="smallbtns"><button id="originalLook">보정 끄기</button><button id="resetLook">기본값</button></div>
 <details><summary>표현 세부 설정</summary>
-<div class="row"><label for="perspective">약한 원근</label><input id="perspective" type="range" min="0" max="15" value="10"><output id="perspectiveOut">10</output></div>
+<div class="row"><label for="fov">카메라 화각(장변)</label><input id="fov" type="range" min="55" max="85" value="70"><output id="fovOut">70</output></div>
 <div class="row"><label for="cameraMatch">카메라 질감 매칭</label><input id="cameraMatch" type="range" min="0" max="100" value="18"><output id="cameraMatchOut">18</output></div>
 <div class="row"><label for="edgeSoftness">윤곽 부드러움</label><input id="edgeSoftness" type="range" min="0" max="100" value="25"><output id="edgeSoftnessOut">25</output></div>
 <div class="row"><label for="lookFilter">촬영 룩 필터</label><input id="lookFilter" type="range" min="0" max="100" value="0"><output id="lookFilterOut">0</output></div>
@@ -3820,7 +3820,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.2.0";
+const APP_VERSION="v2.3.0";
 const CATALOG={
   'LK-S001':{name:'스퀘어 아세테이트 선글라스',price:'89,000원',size:[50,20,145],img:'assets/LK-S001/thumb.jpg',glb:'assets/LK-S001/model.glb',
     fit:{faceWidthMm:140, up:-16, fwd:14}, lens:{tint:[0.391,0.385,0.417], reflect:1.0},
@@ -3849,7 +3849,7 @@ function dbg(s){log.push(String(s).slice(0,300));if(DEBUG){$('dbg').style.displa
 window.addEventListener('error',e=>dbg(e.message));
 window.addEventListener('unhandledrejection',e=>dbg(e.reason?.message||e.reason));
 const clamp=THREE.MathUtils.clamp;
-const defaults={studio:.75,beauty:.45,tone:.35,shadow:.35,heightAdjust:0,depthAdjust:0,perspective:.10,cameraMatch:.18,edgeSoftness:.25,lookFilter:0};
+const defaults={studio:.75,beauty:.45,tone:.35,shadow:.35,heightAdjust:0,depthAdjust:0,fov:70,cameraMatch:.18,edgeSoftness:.25,lookFilter:0};
 const settings={...defaults};
 const profiles={
  acetate:{roughness:.20,metalness:0,clearcoat:.75,clearcoatRoughness:.095,reflectivity:.5},
@@ -3883,7 +3883,7 @@ function message(s){$('msg').firstElementChild.textContent=s;$('msg').style.disp
 function toast(s){const t=$('toast');t.textContent=s;t.classList.add('on');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('on'),2200);}
 function errorUI(e){$('loading').classList.remove('on');$('camerrmsg').textContent=e.message||String(e);$('camerr').classList.add('on');dbg(e.message||e);}
 function renderProduct(){
- settings.perspective=clamp(P.fit.perspective??defaults.perspective,0,.15);$('perspective').value=settings.perspective*100;$('perspectiveOut').textContent=$('perspective').value;
+ settings.fov=clamp(P.fit.fovDeg??defaults.fov,50,90);$('fov').value=settings.fov;$('fovOut').textContent=$('fov').value;if(renderer)updateCameraFov();
  $('templeFade').checked=P.fit.templeFade!==false;$('farTemple').checked=P.fit.farTempleHide!==false;
  $('verbadge').textContent=APP_VERSION;$('pimg').src=P.img;$('pname').textContent=P.name;$('pprice').textContent=P.price;
  for(let i=0;i<3;i++)$('s'+(i+1)).textContent=P.size[i]+'mm';
@@ -3896,9 +3896,9 @@ class OneEuro{
  reset(){this.x=null;this.raw=null;this.dx=0;this.t=0;}
  f(x,t){if(this.x===null){this.x=this.raw=x;this.t=t;return x;}const dt=clamp((t-this.t)/1000,.001,.2);const a=c=>1/(1+1/(2*Math.PI*c*dt));const d=(x-this.raw)/dt;this.raw=x;this.t=t;this.dx+=a(1)*(d-this.dx);this.x+=a(this.mc+this.beta*Math.abs(this.dx))*(x-this.x);return this.x;}
 }
-const posFilters=[new OneEuro(),new OneEuro(),new OneEuro()],scaleFilter=new OneEuro(2.5,2.0);
+const posFilters=[new OneEuro(1.4,.036),new OneEuro(1.4,.036),new OneEuro(1.4,.036)],scaleFilter=new OneEuro(2.5,2.0);
 let filteredQ=null;
-function resetTracking(){posFilters.forEach(f=>f.reset());scaleFilter.reset();filteredQ=null;pose=lastPose=null;lastSeen=-1;faceLm=null;updateSkinMask.previous=null;validFace=false;clearMask();if(glasses)glasses.visible=false;if(faceOcc)faceOcc.visible=false;if(headOcc)headOcc.visible=false;}
+function resetTracking(){posFilters.forEach(f=>f.reset());scaleFilter.reset();filteredQ=null;pnp=null;pose=lastPose=null;lastSeen=-1;faceLm=null;updateSkinMask.previous=null;validFace=false;clearMask();if(glasses)glasses.visible=false;if(faceOcc)faceOcc.visible=false;if(headOcc)headOcc.visible=false;}
 function linearColor(c){return new THREE.Color(...c).convertSRGBToLinear();}
 function microRoughness(){
  const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d');const d=x.createImageData(128,128);let seed=87131;
@@ -3937,7 +3937,7 @@ void main(){
 function setupThree(){
  renderer=new THREE.WebGLRenderer({canvas:glc,alpha:false,antialias:true,preserveDrawingBuffer:false,powerPreference:'high-performance'});
  renderer.outputEncoding=THREE.sRGBEncoding;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;renderer.setClearColor(0x20232a,1);
- scene=new THREE.Scene();cam=new THREE.OrthographicCamera(-640,640,360,-360,1,30000);cam.position.set(0,0,10000);cam.lookAt(0,0,0);
+ scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(50,16/9,30,6000);cam.position.set(0,0,0);
  previewCam=new THREE.OrthographicCamera(-110,110,80,-80,1,30000);previewCam.position.set(0,0,10000);previewCam.lookAt(0,0,0);
  hemi=new THREE.HemisphereLight(0xffffff,0x5b6170,.50);keyL=new THREE.DirectionalLight(0xffffff,1.25);keyL.position.set(-.35,.8,1);fillL=new THREE.DirectionalLight(0xdbe8ff,.35);fillL.position.set(.8,.2,.8);rimL=new THREE.DirectionalLight(0xffffff,.55);rimL.position.set(.5,.7,-.5);scene.add(hemi,keyL,fillL,rimL);
  makeEnvironment();
@@ -3957,7 +3957,7 @@ function setupThree(){
 function ensureRenderer(){try{setupThree();}catch(e){if(renderer)renderer.dispose();renderer=null;throw e;}}
 function resizeRender(){
  if(!renderer)return;renderer.setPixelRatio(renderRatio);renderer.setSize(vw,vh,false);
- cam.left=-vw/2;cam.right=vw/2;cam.top=vh/2;cam.bottom=-vh/2;cam.updateProjectionMatrix();
+ updateCameraFov();
  const aspect=vw/vh,h=Math.max(145,220/aspect);previewCam.left=-h*aspect/2;previewCam.right=h*aspect/2;previewCam.top=h/2;previewCam.bottom=-h/2;previewCam.updateProjectionMatrix();
  background.scale.set(mode==='preview'?h*aspect:vw,mode==='preview'?h:vh,1);
  if(videoTarget)videoTarget.dispose();videoTarget=new THREE.WebGLRenderTarget(glc.width,glc.height,{minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:false});videoTarget.texture.encoding=THREE.sRGBEncoding;background.material.map=videoTarget.texture;background.material.needsUpdate=true;
@@ -3973,7 +3973,7 @@ async function texture(url,color=false){if(!url)return null;const t=await new TH
 function makeLensMaterial(){
  const trans=P.materials?.lens?.transmissionRGB||linearColor(P.lens.tint).toArray();
  const u={tBackdrop:{value:sceneTarget.texture},uResolution:{value:new THREE.Vector2(glc.width,glc.height)},uTransmission:{value:new THREE.Vector3(...trans)},uDensity:{value:1},uGradient:{value:P.materials?.lens?.gradient||0},uLensReflect:{value:settings.studio},uIOR:{value:clamp(P.materials?.lens?.ior??1.5,1.01,2.4)},tDensity:{value:whiteTex},uLensBounds:{value:new THREE.Vector2(-23,23)}};
- const m=new THREE.MeshPhysicalMaterial({color:0x000000,metalness:0,roughness:P.materials?.lens?.roughness??.10,clearcoat:.5,clearcoatRoughness:.075,envMap:envTarget.texture,envMapIntensity:.65,side:THREE.DoubleSide,depthWrite:true});
+ const m=new THREE.MeshPhysicalMaterial({color:0x000000,metalness:0,roughness:P.materials?.lens?.roughness??.04,clearcoat:1,clearcoatRoughness:.03,envMap:envTarget.texture,envMapIntensity:.85,side:THREE.DoubleSide,depthWrite:true});
  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,u);sh.vertexShader='varying float vLensY; varying vec2 vLensUV;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvLensY=position.y; vLensUV=uv;');sh.fragmentShader='uniform sampler2D tBackdrop,tDensity;uniform vec2 uResolution,uLensBounds;uniform vec3 uTransmission;uniform float uDensity,uGradient,uLensReflect,uIOR;varying float vLensY;varying vec2 vLensUV;\n'+sh.fragmentShader;
  sh.fragmentShader=sh.fragmentShader.replace('gl_FragColor = vec4( outgoingLight, diffuseColor.a );',`float mu=max(abs(dot(normalize(vViewPosition),normal)),0.28);
  float path=1.0/sqrt(max(0.28,1.0-(1.0-mu*mu)/(uIOR*uIOR)));
@@ -4039,14 +4039,6 @@ function installTrackingFade(){
  m.customProgramCacheKey=()=> 'look-v21-'+m.userData.role+'-'+!!m.userData.temple;m.needsUpdate=true;
  }
 }
-function updateFitProjection(){
- cam.updateProjectionMatrix();if(mode!=='ar'||!pose||settings.perspective<=0)return;
- const distance=Math.max(400,pose.width/settings.perspective),e=cam.projectionMatrix.elements;
- e[11]=-1/distance;e[15]=1-(10000-pose.pos.z)/distance;
- cam.projectionMatrixInverse.copy(cam.projectionMatrix).invert();
- // Reconstruct occluder xy so landmark pixels stay registered under the same projection.
- if(faceLm){const pa=faceOcc.geometry.attributes.position.array;for(let i=0;i<468;i++){const p=V(faceLm[i]).addScaledVector(pose.fwd,-1.2*pose.px),w=1-(p.z-pose.pos.z)/distance;pa[i*3]=p.x*w;pa[i*3+1]=p.y*w;pa[i*3+2]=p.z;}faceOcc.geometry.attributes.position.needsUpdate=true;}
-}
 function updatePartVisibility(){
  if(!glasses)return;const yaw=pose?Math.asin(clamp(pose.fwd.x,-1,1)):0;
  glasses.traverse(o=>{if(!o.isMesh)return;const m=o.material,u=m.userData.trackUniforms;if(!u)return;
@@ -4062,7 +4054,7 @@ async function loadModel(){if(glasses&&modelSku===CUR)return;if(modelPromise)ret
  modelPromise=(async()=>{disposeModel();const g=await new THREE.GLTFLoader().loadAsync(P.glb);glasses=g.scene;await prepareMaterials(glasses);glasses.visible=false;scene.add(glasses);modelSku=CUR;})();
  try{await modelPromise;}catch(e){disposeModel();throw new Error('제품 3D 모델을 준비하지 못했습니다. '+e.message);}finally{modelPromise=null;}
 }
-function updateMaterialLighting(){if(!renderer)return;for(const m of materials){if(m.userData.role==='decal')continue;m.envMapIntensity=m.userData.role==='lens'?.20+settings.studio*.32:.35+settings.studio*.60;if(m.userData.role==='lens')m.userData.uniforms.uLensReflect.value=.12+settings.studio*.40;}keyL.intensity=.75+settings.studio*.6;fillL.intensity=.24+settings.studio*.18;rimL.intensity=settings.studio*.5;}
+function updateMaterialLighting(){if(!renderer)return;for(const m of materials){if(m.userData.role==='decal')continue;m.envMapIntensity=m.userData.role==='lens'?.30+settings.studio*.45:.35+settings.studio*.60;if(m.userData.role==='lens')m.userData.uniforms.uLensReflect.value=.16+settings.studio*.52;}keyL.intensity=.75+settings.studio*.6;fillL.intensity=.24+settings.studio*.18;rimL.intensity=settings.studio*.5;}
 function clearMask(){skinCtx.clearRect(0,0,skinCanvas.width,skinCanvas.height);skinCtx.fillStyle='#000';skinCtx.fillRect(0,0,skinCanvas.width,skinCanvas.height);if(maskTex)maskTex.needsUpdate=true;}
 function updateSkinMask(lm){
  // Smooth mask coordinates slightly; reset immediately after tracking loss to prevent stale-face trails.
@@ -4075,49 +4067,100 @@ function updateSkinMask(lm){
  x.fillStyle='#00ff00';x.strokeStyle='#00ff00';x.lineWidth=Math.max(4,Math.hypot((lm[234].x-lm[454].x)*W,(lm[234].y-lm[454].y)*H)*.035);x.lineJoin='round';for(const ids of FEATURES){path(ids);x.fill();x.stroke();}
  maskTex.needsUpdate=true;
 }
-const V=p=>new THREE.Vector3((p.x-.5)*vw,(.5-p.y)*vh,-p.z*vw);
+const V=p=>new THREE.Vector3((p.x-.5)*vw,(.5-p.y)*vh,0);
 function average(ids,lm){const v=new THREE.Vector3();ids.forEach(i=>v.add(V(lm[i])));return v.multiplyScalar(1/ids.length);}
 function median(a){const b=[...a].sort((a,b)=>a-b);return b[Math.floor(b.length/2)];}
 function calibrationTimeout(){return clamp(inferenceMs*75+6000,15000,60000);}
+// ===== v2.3 pose: MediaPipe canonical face model (mm) + PnP, true perspective camera =====
+const CANON=new Float32Array([0,-34.06,59.8,0,-11.27,74.76,0,-20.89,60.58,-4.64,9.55,66.34,0,-4.63,75.87,0,3.66,72.43,0,24.73,57.89,-42.53,25.78,32.8,0,40.19,52.85,0,48.86,53.85,0,82.62,44.82,0,-37.07,58.65,0,-39.18,55.69,0,-39.94,52.19,0,-45.42,54.05,0,-47.46,55.29,0,-50.2,56.01,0,-53.65,55.35,0,-61.5,50.71,0,-15.01,71.12,-4.16,-14.66,64.48,-70.88,54.35,1,-26.29,20.36,38.48,-31.98,19.86,37.97,-37.75,20.39,36.46,-44.66,24.23,31.55,-21.64,21.9,38.52,-32.08,32.24,41.16,-26.74,32.05,40.92,-37.45,31.65,39.72,-41.61,30.59,37.2,-50.62,19.34,27.76,-22.67,-74.26,43.9,-44.46,26.64,31.73,-72.15,22.63,0.73,-58,23.5,22.04,-28.45,-7.21,44.33,-7.11,-33.29,58.77,-6.06,-39.25,54.45,-14.32,-35.01,54.96,-19.15,-38.03,50.29,-11.31,-39.74,51.9,-15.64,-40.83,48.42,-26.5,-50.04,41.88,-4.27,-10.94,73.61,-4.96,-4.76,74.4,-52.53,38.82,33.63,-17.19,9.75,45.58,-16.09,-9.43,58.14,-16.51,-6.11,55.81,-47.66,-7.02,35.35,-4.78,2.96,71.01,-37.35,45.08,45.5,-45.89,43.02,40.48,-62.79,66.15,14.26,-12.21,41.42,51.06,-21.93,31,40.01,-31.03,-43.53,40.96,-67.2,-47.89,-17.45,-11.94,-13.07,57.38,-7.3,-15.94,58.33,-24.56,-43.43,42.84,-22.05,-43.05,41.62,-49.86,48.02,37.52,-15.92,-12.58,54.57,-26.45,45.25,49.22,-27.6,51.01,50.16,-35.24,80.06,37.29,-56,57.15,27.24,-30.64,65.66,45.3,-57.21,42.55,28.31,-63.74,47.86,15.92,-6.73,-36.88,57.38,-12.63,-37.88,54.18,-17.33,-39.53,50.01,-10.44,-14.65,56.62,-23.21,-43.29,42.58,-20.57,-44.78,45.21,-21.53,-42.76,40.38,-9.47,-10.35,65.12,-14.69,-40.36,46.05,-10.24,-39.9,49.27,-5.33,-39.93,51.38,-7.7,-60.95,49.86,-7,-52.92,54.48,-6.7,-49.5,55.1,-6.31,-46.95,54.49,-5.83,-45.18,53.4,-15.37,-44.23,47.45,-16.16,-44.76,48.14,-17.29,-46.19,48.54,-18.39,-48.29,48.24,-23.68,-31.06,48.68,-75.42,-10.49,-24.31,0,-17.24,66.01,-18.27,-44,43.99,-19.3,-44.12,44.97,-5.97,-20.14,58.66,-14.06,-17.14,52.41,-6.62,-18.19,58.64,-23.42,5.72,42.94,-33.27,1.05,41.14,-17.26,-9.19,52.73,-51.33,74.86,26.6,-45.39,63.2,36.83,-39.87,51.09,44.66,-21.7,-54.4,44.56,-13.96,50.12,53.16,-16.2,65.99,49.21,-18.91,82.36,42.75,-41.96,22.35,33.75,-57.33,14.12,24.32,-18.6,23.56,38.43,-49.89,30.75,30.84,-13.03,14.16,48.31,-13.06,-6.73,64.16,-64.65,9.37,16.9,-52.59,9.46,29.74,-44.32,7.22,35.23,-33.01,8.62,38.73,-24.3,11.31,40.39,-18.21,14.68,42.24,-5.63,23.08,55.67,-63.38,-5.29,18.81,-55.88,32.08,26.88,-2.43,-14.63,70.71,-16.11,3.39,48.95,-77.43,23.65,-20.05,-13.91,18.51,44.49,-17.86,-9.78,48.5,-46.71,26.64,30.84,-13.34,-2.84,60.97,-72.71,-28.91,-22.52,-18.56,25.85,37.58,-9.23,0.73,66.72,-50.01,-61.35,18.93,-50.85,-71.79,7.15,-71.59,-8.12,-0.72,-58.43,-52.48,9.24,-68.47,36.63,7.25,-24.13,-82.59,41.19,-1.8,-16.9,65.73,-21.04,-1.64,45.66,-64.08,22.36,15.61,-36.7,23.6,36.35,-31.77,22.94,37.76,-21.96,-45.98,44.8,-62.35,-19.44,16.64,-12.93,-92.96,40.94,-32.11,-85.33,28.02,-40.69,-79.93,19.25,0,65.45,50.27,0,-94.03,42.64,-27.24,23.16,37.77,-22.88,23.99,36.98,-19.98,24.97,36.89,-61.3,33.99,20.39,-22.88,28.87,37.75,-27.24,29.62,38.72,-31.77,29.64,38.77,-36.7,29.28,37.24,-40.18,28.57,34.83,-75.56,41.07,-9.92,-40.18,24.84,34.41,0,-25.22,59.32,-17.76,-26.84,52.13,-12.22,-11.82,59.52,-7.31,-25.37,58.15,0,32.71,52.36,-41.35,-69.97,26.72,-33.12,-76.61,33.83,-13.14,-86.4,47.02,-59.41,-62.24,-6.31,-19.98,27.44,37.44,-9.01,12.37,57.54,0,-87.65,48.91,-23.09,-89.74,36.09,-69.54,-24.4,-1.31,-10.99,-44.59,51.21,-11.81,-45.8,51.9,-12.56,-47.88,52.37,-13.25,-51.07,52.05,-15.46,-58.19,47.58,-19.54,-41.84,44.32,-21.18,-41.37,45.55,-22.85,-40.51,45.82,-28.5,-36.66,44.85,-52.79,-22.39,28.61,-9.47,19.08,51.97,-13.14,31.05,42.31,-17.8,28.6,38.82,-18.45,-40.99,42.47,-54.36,-40.3,21.1,-7.66,31.82,48.61,-19.39,-66.14,45.21,0,10.59,67.75,-5.17,15.84,61.48,0,17.28,63.17,-12.47,2.3,56.81,0,-79.42,51.81,0,-69.91,51.53,-9.98,-69.31,49.8,-32.89,-53.83,37.96,-23.12,-15.66,45.9,-26.8,-61.12,40.96,-38.33,-15.37,41.38,-29.62,-22.74,44.41,-43.87,-26.83,36.44,-12.17,-78.34,49.69,-15.42,-1.37,52.01,-38.78,-60.42,33.11,-30.84,-68.1,38.14,-37.47,-45.04,37.26,-60.94,-32.06,14.73,-45.89,-47.29,29.83,-65.83,-39.41,0.7,-34.93,-31.96,41.3,-12.56,8.02,53.08,-11.26,-9.34,65.39,-14.43,-11.43,59.05,-9.23,-5.29,70.03,-17.55,35.29,43.28,-26.33,37.14,43.65,-33.88,37.22,43.09,-40.76,36.75,40.76,-46.23,34.75,36.46,-51.72,25.36,26.71,-72.97,7.63,-0.49,-47.07,16.51,31.1,-40.72,14.77,34.77,-32.7,14.71,37.32,-25.28,16.17,38.65,-19.71,18.59,39.62,-15.8,20.98,40.85,-76.64,6.73,-24.36,-13.97,-13.4,56.3,-8.85,6.59,62.33,-7.67,-9.68,70.78,-4.6,-13.34,67.87,-7.49,-10.68,67.98,-12.36,-15.86,54.8,-3.87,-14.1,69.58,-3.2,-16.08,65.09,-16.4,25.56,38.64,-12.56,24.67,42.04,-10.31,23.83,46.16,-42.53,27.72,33.15,-45.3,29.1,33.4,4.64,9.55,66.34,42.53,25.78,32.8,4.16,-14.66,64.48,70.88,54.35,1,26.29,20.36,38.48,31.98,19.86,37.97,37.75,20.39,36.46,44.66,24.23,31.55,21.64,21.9,38.52,32.08,32.24,41.16,26.74,32.05,40.92,37.45,31.65,39.72,41.61,30.59,37.2,50.62,19.34,27.76,22.67,-74.26,43.9,44.46,26.64,31.73,72.15,22.63,0.73,58,23.5,22.04,28.45,-7.21,44.33,7.11,-33.29,58.77,6.06,-39.25,54.45,14.32,-35.01,54.96,19.15,-38.03,50.29,11.31,-39.74,51.9,15.64,-40.83,48.42,26.5,-50.04,41.88,4.27,-10.94,73.61,4.96,-4.76,74.4,52.53,38.82,33.63,17.19,9.75,45.58,16.09,-9.43,58.14,16.51,-6.11,55.81,47.66,-7.02,35.35,4.78,2.96,71.01,37.35,45.08,45.5,45.89,43.02,40.48,62.79,66.15,14.26,12.21,41.42,51.06,21.93,31,40.01,31.03,-43.53,40.96,67.2,-47.89,-17.45,11.94,-13.07,57.38,7.3,-15.94,58.33,24.56,-43.43,42.84,22.05,-43.05,41.62,49.86,48.02,37.52,15.92,-12.58,54.57,26.45,45.25,49.22,27.6,51.01,50.16,35.24,80.06,37.29,56,57.15,27.24,30.64,65.66,45.3,57.21,42.55,28.31,63.74,47.86,15.92,6.73,-36.88,57.38,12.63,-37.88,54.18,17.33,-39.53,50.01,10.44,-14.65,56.62,23.21,-43.29,42.58,20.57,-44.78,45.21,21.53,-42.76,40.38,9.47,-10.35,65.12,14.69,-40.36,46.05,10.24,-39.9,49.27,5.33,-39.93,51.38,7.7,-60.95,49.86,7,-52.92,54.48,6.7,-49.5,55.1,6.31,-46.95,54.49,5.83,-45.18,53.4,15.37,-44.23,47.45,16.16,-44.76,48.14,17.29,-46.19,48.54,18.39,-48.29,48.24,23.68,-31.06,48.68,75.42,-10.49,-24.31,18.27,-44,43.99,19.3,-44.12,44.97,5.97,-20.14,58.66,14.06,-17.14,52.41,6.62,-18.19,58.64,23.42,5.72,42.94,33.27,1.05,41.14,17.26,-9.19,52.73,51.33,74.86,26.6,45.39,63.2,36.83,39.87,51.09,44.66,21.7,-54.4,44.56,13.96,50.12,53.16,16.2,65.99,49.21,18.91,82.36,42.75,41.96,22.35,33.75,57.33,14.12,24.32,18.6,23.56,38.43,49.89,30.75,30.84,13.03,14.16,48.31,13.06,-6.73,64.16,64.65,9.37,16.9,52.59,9.46,29.74,44.32,7.22,35.23,33.01,8.62,38.73,24.3,11.31,40.39,18.21,14.68,42.24,5.63,23.08,55.67,63.38,-5.29,18.81,55.88,32.08,26.88,2.43,-14.63,70.71,16.11,3.39,48.95,77.43,23.65,-20.05,13.91,18.51,44.49,17.86,-9.78,48.5,46.71,26.64,30.84,13.34,-2.84,60.97,72.71,-28.91,-22.52,18.56,25.85,37.58,9.23,0.73,66.72,50.01,-61.35,18.93,50.85,-71.79,7.15,71.59,-8.12,-0.72,58.43,-52.48,9.24,68.47,36.63,7.25,24.13,-82.59,41.19,1.8,-16.9,65.73,21.04,-1.64,45.66,64.08,22.36,15.61,36.7,23.6,36.35,31.77,22.94,37.76,21.96,-45.98,44.8,62.35,-19.44,16.64,12.93,-92.96,40.94,32.11,-85.33,28.02,40.69,-79.93,19.25,27.24,23.16,37.77,22.88,23.99,36.98,19.98,24.97,36.89,61.3,33.99,20.39,22.88,28.87,37.75,27.24,29.62,38.72,31.77,29.64,38.77,36.7,29.28,37.24,40.18,28.57,34.83,75.56,41.07,-9.92,40.18,24.84,34.41,17.76,-26.84,52.13,12.22,-11.82,59.52,7.31,-25.37,58.15,41.35,-69.97,26.72,33.12,-76.61,33.83,13.14,-86.4,47.02,59.41,-62.24,-6.31,19.98,27.44,37.44,9.01,12.37,57.54,23.09,-89.74,36.09,69.54,-24.4,-1.31,10.99,-44.59,51.21,11.81,-45.8,51.9,12.56,-47.88,52.37,13.25,-51.07,52.05,15.46,-58.19,47.58,19.54,-41.84,44.32,21.18,-41.37,45.55,22.85,-40.51,45.82,28.5,-36.66,44.85,52.79,-22.39,28.61,9.47,19.08,51.97,13.14,31.05,42.31,17.8,28.6,38.82,18.45,-40.99,42.47,54.36,-40.3,21.1,7.66,31.82,48.61,19.39,-66.14,45.21,5.17,15.84,61.48,12.47,2.3,56.81,9.98,-69.31,49.8,32.89,-53.83,37.96,23.12,-15.66,45.9,26.8,-61.12,40.96,38.33,-15.37,41.38,29.62,-22.74,44.41,43.87,-26.83,36.44,12.17,-78.34,49.69,15.42,-1.37,52.01,38.78,-60.42,33.11,30.84,-68.1,38.14,37.47,-45.04,37.26,60.94,-32.06,14.73,45.89,-47.29,29.83,65.83,-39.41,0.7,34.93,-31.96,41.3,12.56,8.02,53.08,11.26,-9.34,65.39,14.43,-11.43,59.05,9.23,-5.29,70.03,17.55,35.29,43.28,26.33,37.14,43.65,33.88,37.22,43.09,40.76,36.75,40.76,46.23,34.75,36.46,51.72,25.36,26.71,72.97,7.63,-0.49,47.07,16.51,31.1,40.72,14.77,34.77,32.7,14.71,37.32,25.28,16.17,38.65,19.71,18.59,39.62,15.8,20.98,40.85,76.64,6.73,-24.36,13.97,-13.4,56.3,8.85,6.59,62.33,7.67,-9.68,70.78,4.6,-13.34,67.87,7.49,-10.68,67.98,12.36,-15.86,54.8,3.87,-14.1,69.58,3.2,-16.08,65.09,16.4,25.56,38.64,12.56,24.67,42.04,10.31,23.83,46.16,42.53,27.72,33.15,45.3,29.1,33.4]);
+const CANON_W=153.28,CANON_H=176.66,CANON_CENTER=[0,6.73,-24.36];
+const PNP_IDS=[1,2,4,5,6,168,195,197,8,9,19,94,98,327,129,358,49,279,48,278,45,275,220,440,236,456,3,248,51,281,114,343,188,412,122,351,196,419,174,399,198,420,209,429,33,133,362,263,130,359,243,463,10,109,338,151,107,336,69,299,67,297,103,332,104,333,108,337,66,296,105,334,50,280,101,330,118,347,123,352,116,345,117,346,111,340,205,425,187,411,147,376,36,266,206,426,207,427,100,329,47,277,152,175,199,200,148,377,176,400,171,396,208,428,201,421,32,262,194,418,140,369,170,395,136,365,150,379,149,378,234,454,93,323,132,361,127,356,162,389,21,251,54,284,58,288,172,397,227,447,137,366,34,264,139,368,156,383,124,353,113,342,226,446,35,265,31,261,228,448,229,449,230,450,231,451,232,452,233,453,244,464,245,465,193,417,55,285],PNP_W=[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0.5,0.5,0.5,1,1,1,1,1,0.5,0.5,0.5,0.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0.5,1,1,1,0.5,0.5,0.5,0.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1];
+let focalPx=800,pnp=null;
+function updateCameraFov(){focalPx=(Math.max(vw,vh)/2)/Math.tan(settings.fov*Math.PI/360);cam.fov=2*Math.atan((vh/2)/focalPx)*180/Math.PI;cam.aspect=vw/vh;cam.updateProjectionMatrix();}
+function rotApply(R,p,o){o[0]=R[0]*p[0]+R[1]*p[1]+R[2]*p[2];o[1]=R[3]*p[0]+R[4]*p[1]+R[5]*p[2];o[2]=R[6]*p[0]+R[7]*p[1]+R[8]*p[2];return o;}
+function rotExp(w){const th=Math.hypot(w[0],w[1],w[2]);if(th<1e-12)return [1,0,0,0,1,0,0,0,1];const x=w[0]/th,y=w[1]/th,z=w[2]/th,c=Math.cos(th),s=Math.sin(th),v=1-c;return [c+x*x*v,x*y*v-z*s,x*z*v+y*s,y*x*v+z*s,c+y*y*v,y*z*v-x*s,z*x*v-y*s,z*y*v+x*s,c+z*z*v];}
+function rotMul(A,B){const o=new Array(9);for(let i=0;i<3;i++)for(let j=0;j<3;j++)o[i*3+j]=A[i*3]*B[j]+A[i*3+1]*B[3+j]+A[i*3+2]*B[6+j];return o;}
+function solve6(H,g){const n=6,A=[];for(let i=0;i<n;i++){const r=[];for(let k=0;k<n;k++)r.push(H[i*n+k]);r.push(g[i]);A.push(r);}
+ for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(A[r][c])>Math.abs(A[p][c]))p=r;if(Math.abs(A[p][c])<1e-12)return null;const tmp=A[c];A[c]=A[p];A[p]=tmp;for(let r=c+1;r<n;r++){const f=A[r][c]/A[c][c];if(!f)continue;for(let k=c;k<=n;k++)A[r][k]-=f*A[c][k];}}
+ const x=new Array(n);for(let i=n-1;i>=0;i--){let s=A[i][n];for(let k=i+1;k<n;k++)s-=A[i][k]*x[k];x[i]=s/A[i][i];}return x;}
+// Gauss-Newton PnP with Cauchy reweighting. Rotation is updated about the face origin so T and R stay decoupled.
+function solvePnP(lm,f,scale,init){
+ let R=init?init.R.slice():[1,0,0,0,1,0,0,0,1],T=init?init.T.slice():[0,0,-450];
+ const n=PNP_IDS.length,u=new Float64Array(n),v=new Float64Array(n);
+ for(let k=0;k<n;k++){const p=lm[PNP_IDS[k]];u[k]=(p.x-.5)*vw;v[k]=(.5-p.y)*vh;}
+ const faceW=Math.hypot((lm[234].x-lm[454].x)*vw,(lm[234].y-lm[454].y)*vh),cth=Math.max(2,faceW*.03);
+ const pc=[0,0,0],pm=[0,0,0],H=new Float64Array(36),g=new Float64Array(6),Ju=new Float64Array(6),Jv=new Float64Array(6);let rms=0;
+ const iters=init?6:16;
+ for(let it=0;it<iters;it++){
+  H.fill(0);g.fill(0);let se=0,sw=0;
+  for(let k=0;k<n;k++){const i=PNP_IDS[k]*3;pm[0]=CANON[i]*scale;pm[1]=CANON[i+1]*scale;pm[2]=CANON[i+2]*scale;rotApply(R,pm,pc);
+   const Xr=pc[0],Yr=pc[1],Zr=pc[2],X=Xr+T[0],Y=Yr+T[1],Z=Zr+T[2];if(Z>-50)continue;
+   const iz=-1/Z,pu=f*X*iz,pv=f*Y*iz,ru=u[k]-pu,rv=v[k]-pv;
+   let wk=PNP_W[k];if(it>0)wk/=1+(ru*ru+rv*rv)/(cth*cth);
+   const au0=f*iz,au2=f*X*iz*iz,av1=f*iz,av2=f*Y*iz*iz;
+   Ju[0]=au2*Yr;Ju[1]=au0*Zr-au2*Xr;Ju[2]=-au0*Yr;Ju[3]=au0;Ju[4]=0;Ju[5]=au2;
+   Jv[0]=-av1*Zr+av2*Yr;Jv[1]=-av2*Xr;Jv[2]=av1*Xr;Jv[3]=0;Jv[4]=av1;Jv[5]=av2;
+   for(let a=0;a<6;a++){g[a]+=wk*(Ju[a]*ru+Jv[a]*rv);for(let b=a;b<6;b++)H[a*6+b]+=wk*(Ju[a]*Ju[b]+Jv[a]*Jv[b]);}
+   se+=wk*(ru*ru+rv*rv);sw+=wk;}
+  for(let a=0;a<6;a++)for(let b=0;b<a;b++)H[a*6+b]=H[b*6+a];
+  for(let a=0;a<6;a++)H[a*7]=H[a*7]*1.0005+1e-6;
+  rms=Math.sqrt(se/Math.max(sw,1e-9));
+  const d=solve6(H,g);if(!d||!d.every(Number.isFinite))break;
+  const th=[d[0],d[1],d[2]],mag=Math.hypot(th[0],th[1],th[2]);if(mag>.6){const s=.6/mag;th[0]*=s;th[1]*=s;th[2]*=s;}
+  R=rotMul(rotExp(th),R);T=[T[0]+d[3],T[1]+d[4],T[2]+d[5]];if(T[2]>-120)T[2]=-120;if(T[2]<-3000)T[2]=-3000;
+  if(mag<1e-4&&Math.hypot(d[3],d[4],d[5])<.02)break;
+ }
+ return {R,T,rms};
+}
 function onFace(r){
  if(mode!=='ar'||!glasses)return;const lm=r.multiFaceLandmarks?.[0],t=activeSend?.started??performance.now();
  if(!lm||lm.length<468){validFace=false;faceLm=null;if(calibration)calibration.samples=[];return;}
- const left=average([234,93,132,127],lm),rightP=average([454,323,361,356],lm),top=average([10,109,338,151],lm),bottom=average([152,148,377,199],lm);
- const right=rightP.clone().sub(left).normalize(),up=top.clone().sub(bottom).normalize(),fwd=new THREE.Vector3().crossVectors(right,up).normalize(),up2=new THREE.Vector3().crossVectors(fwd,right).normalize();
  const width=V(lm[234]).distanceTo(V(lm[454])),height=V(lm[10]).distanceTo(V(lm[152]));
+ if(!Number.isFinite(width)||width<vw*.10||width>vw*.9||height<vh*.13){validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
+ const scaleM=(faceWidthCal||P.fit.faceWidthMm||CANON_W)/CANON_W;
+ const sol=solvePnP(lm,focalPx,scaleM,pnp&&t-lastSeen<600?pnp:null);
+ if(!sol.R.every(Number.isFinite)||!sol.T.every(Number.isFinite)||sol.rms>width*.08){pnp=null;validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
+ pnp=sol;const R=sol.R,T=sol.T;
+ const right=new THREE.Vector3(R[0],R[3],R[6]),up2=new THREE.Vector3(R[1],R[4],R[7]),fwd=new THREE.Vector3(R[2],R[5],R[8]);
  const yaw=Math.asin(clamp(fwd.x,-1,1))*180/Math.PI,pitch=Math.asin(clamp(fwd.y,-1,1))*180/Math.PI;
- if(!Number.isFinite(width)||width<vw*.10||width>vw*.9||height<vh*.13||Math.abs(yaw)>65||Math.abs(pitch)>40){validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
+ if(Math.abs(yaw)>65||Math.abs(pitch)>40){validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
  const resumed=lastSeen<0||t-lastSeen>Math.max(350,inferenceMs*3);
- if(faceWidthCal&&lastSeen>0&&t-lastSeen>12000){faceWidthCal=null;scaleFilter.reset();$('calStatus').textContent='얼굴이 오래 사라져 크기 보정을 해제했습니다.';}if(resumed){posFilters.forEach(f=>f.reset());scaleFilter.reset();filteredQ=null;lastPose=null;}
+ if(faceWidthCal&&lastSeen>0&&t-lastSeen>12000){faceWidthCal=null;$('calStatus').textContent='얼굴이 오래 사라져 크기 보정을 해제했습니다.';}if(resumed){posFilters.forEach(f=>f.reset());filteredQ=null;lastPose=null;}
  validFace=true;lastSeen=performance.now();faceLm=lm;updateSkinMask(lm);
+ // 눈 깊이(카메라 좌표)에서 px→mm 환산. 홍채·PD 실측은 이 깊이에서 계산한다.
+ const posed=(i,o)=>{const k=i*3;o=rotApply(R,[CANON[k]*scaleM,CANON[k+1]*scaleM,CANON[k+2]*scaleM],o||[0,0,0]);o[0]+=T[0];o[1]+=T[1];o[2]+=T[2];return o;};
+ const eyeZ=(posed(33)[2]+posed(133)[2]+posed(362)[2]+posed(263)[2])/4,mmPerPx=-eyeZ/focalPx;
  if(calibration){
   if(t-calibration.start>calibrationTimeout()){calibration=null;$('calStatus').textContent='보정 시간이 초과되었습니다. 밝은 곳에서 다시 시도해 주세요.';}
   else if(lm.length>=478&&Math.abs(yaw)<8&&Math.abs(pitch)<10&&Math.abs(right.y)<.12){
-   const iris=V(lm[468]).distanceTo(V(lm[473]));const estimate=width/iris*calibration.pd;
-   if(iris>vw*.06&&estimate>95&&estimate<195){calibration.samples.push(estimate);if(calibration.samples.length>45)calibration.samples.shift();$('calStatus').textContent='정면을 유지해 주세요 · '+Math.min(100,Math.round(calibration.samples.length/45*100))+'%';
-    if(calibration.samples.length===45){const med=median(calibration.samples),spread=Math.sqrt(calibration.samples.reduce((s,x)=>s+(x-med)**2,0)/45)/med;if(spread<.025){faceWidthCal=med;calibration=null;scaleFilter.reset();$('calStatus').textContent='PD 기반 크기 보정 완료 · 추정값입니다.';}else{$('calStatus').textContent='움직임을 줄이고 카메라를 바라봐 주세요.';}}}
+   const irisPx=V(lm[468]).distanceTo(V(lm[473]));const estimate=scaleM*calibration.pd/(irisPx*mmPerPx)*CANON_W;
+   if(irisPx>vw*.06&&estimate>95&&estimate<195){calibration.samples.push(estimate);if(calibration.samples.length>45)calibration.samples.shift();$('calStatus').textContent='정면을 유지해 주세요 · '+Math.min(100,Math.round(calibration.samples.length/45*100))+'%';
+    if(calibration.samples.length===45){const med=median(calibration.samples),spread=Math.sqrt(calibration.samples.reduce((s,x)=>s+(x-med)**2,0)/45)/med;if(spread<.025){faceWidthCal=med;calibration=null;$('calStatus').textContent='PD 기반 크기 보정 완료 · 추정값입니다.';}else{$('calStatus').textContent='움직임을 줄이고 카메라를 바라봐 주세요.';}}}
   }else{calibration.samples=[];$('calStatus').textContent='정면에서 눈을 뜨고 카메라를 바라봐 주세요.';}
  }
- // 홍채 지름(≈11.7mm) 기반 자동 크기 보정: 시작 후 정면에서 30표본 수집 (PD 입력 없이 실측화)
+ // 홍채 지름(≈11.7mm) 기반 자동 크기 보정: PnP 거리 기준으로 환산한 홍채 mm와 비교
  if(!autoCal.done&&!faceWidthCal&&!calibration&&lm.length>=478&&Math.abs(yaw)<12&&Math.abs(pitch)<12){
-  if(!autoCal.start)autoCal.start=t;const iris=(V(lm[468]).distanceTo(V(lm[473])));
+  if(!autoCal.start)autoCal.start=t;
   const irisL=V(lm[469]).distanceTo(V(lm[471])),irisR=V(lm[474]).distanceTo(V(lm[476]));const irisD=(irisL+irisR)/2;
-  if(irisD>vw*.006){const est=width/irisD*IRIS_MM;if(est>105&&est<185)autoCal.samples.push(est);}
+  if(irisD>vw*.006){const est=scaleM*IRIS_MM/(irisD*mmPerPx)*CANON_W;if(est>105&&est<185)autoCal.samples.push(est);}
   if(autoCal.samples.length>=30){const med=median(autoCal.samples),spread=Math.sqrt(autoCal.samples.reduce((s,x)=>s+(x-med)**2,0)/autoCal.samples.length)/med;
-   if(spread<.04){faceWidthCal=med;scaleFilter.reset();$('calStatus').textContent='홍채 기준 자동 크기 보정 완료 · 추정값입니다.';}autoCal.done=true;}
+   if(spread<.04){faceWidthCal=med;$('calStatus').textContent='홍채 기준 자동 크기 보정 완료 · 추정값입니다.';}autoCal.done=true;}
   else if(t-autoCal.start>8000)autoCal.done=true;
  }
- const px=scaleFilter.f(width/(faceWidthCal||P.fit.faceWidthMm||140),t);
- const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(right,up2,fwd));
+ const widthMm=scaleM*CANON_W,heightMm=scaleM*CANON_H,px=focalPx/(-T[2]);
+ const q=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().set(R[0],R[1],R[2],0,R[3],R[4],R[5],0,R[6],R[7],R[8],0,0,0,0,1));
  if(!filteredQ)filteredQ=q.clone();else{if(filteredQ.dot(q)<0)q.set(-q.x,-q.y,-q.z,-q.w);const dt=lastPose?clamp((t-lastPose.t)/1000,.008,.15):.033;const angle=filteredQ.angleTo(q);filteredQ.slerp(q,1-Math.exp(-dt*(12+angle*45)));}
  const tilt=new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(1,0,0),(P.fit.tiltDeg??7)*Math.PI/180),gq=filteredQ.clone().multiply(tilt);
- const N=V(lm[168]);const raw=N.clone().addScaledVector(up2,(P.fit.up+settings.heightAdjust)*px).addScaledVector(fwd,(P.fit.fwd+settings.depthAdjust)*px);
- // Bounded nose-clearance correction using restored 3D pad back surfaces. Approximate, not a mechanical fit solver.
- if(P.fit.noseClearance!==false){let correction=-Infinity;for(const a of (P.fit.padAnchorsMm||[[-10.3,-5,-11.1],[10.3,-5,-11.1]])){const pad=new THREE.Vector3(...a).applyQuaternion(gq).multiplyScalar(px).add(raw);let nearest=null,best=Infinity;for(const i of [168,6,197,195,5,4,45,275,64,294,98,327]){const point=V(lm[i]);const d=point.clone().sub(pad);const ds=Math.hypot(d.dot(right),d.dot(up2));if(ds<best){best=ds;nearest=d.dot(fwd);}}if(best<8*px)correction=Math.max(correction,nearest/px+.4);}if(Number.isFinite(correction))raw.addScaledVector(fwd,clamp(correction,-2,3)*px);}
+ // 얼굴 좌표계(mm): 정준 모델 코 지점 + 착용 오프셋. 모든 값이 실측 mm라 사람·거리와 무관하게 일정하다.
+ const local=new THREE.Vector3(CANON[168*3]*scaleM,CANON[168*3+1]*scaleM+P.fit.up+settings.heightAdjust,CANON[168*3+2]*scaleM+P.fit.fwd+settings.depthAdjust);
+ if(P.fit.noseClearance!==false){let correction=-Infinity;for(const a of (P.fit.padAnchorsMm||[[-10.3,-5,-11.1],[10.3,-5,-11.1]])){const pad=new THREE.Vector3(...a).applyQuaternion(tilt).add(local);let nearest=null,best=Infinity;for(const i of [168,6,197,195,5,4,45,275,64,294,98,327]){const dx=CANON[i*3]*scaleM-pad.x,dy=CANON[i*3+1]*scaleM-pad.y,ds=Math.hypot(dx,dy);if(ds<best){best=ds;nearest=CANON[i*3+2]*scaleM-pad.z;}}if(best<8)correction=Math.max(correction,nearest+.4);}if(Number.isFinite(correction))local.z+=clamp(correction,-2,3);}
+ const rawArr=rotApply(R,[local.x,local.y,local.z],[0,0,0]);const raw=new THREE.Vector3(rawArr[0]+T[0],rawArr[1]+T[1],rawArr[2]+T[2]);
  const pos=new THREE.Vector3(...[raw.x,raw.y,raw.z].map((x,i)=>posFilters[i].f(x,t)));
- const velocity=new THREE.Vector3();if(lastPose){const dt=Math.max(.008,(t-lastPose.t)/1000);velocity.copy(pos).sub(lastPose.pos).divideScalar(dt);const max=width*2.5;if(velocity.length()>max)velocity.setLength(max);if(velocity.length()<width*.035)velocity.set(0,0,0);velocity.lerp(lastPose.velocity,.45);}
- pose={pos,q:gq,faceQ:filteredQ.clone(),px,width,height,fwd:fwd.clone(),center:left.clone().add(rightP).multiplyScalar(.5),velocity,t};lastPose=pose;
- const pa=faceOcc.geometry.attributes.position.array;for(let i=0;i<468;i++){const p=V(lm[i]).addScaledVector(fwd,-1.2*px);pa[i*3]=p.x;pa[i*3+1]=p.y;pa[i*3+2]=p.z;}faceOcc.geometry.attributes.position.needsUpdate=true;
+ const velocity=new THREE.Vector3();if(lastPose){const dt=Math.max(.008,(t-lastPose.t)/1000);velocity.copy(pos).sub(lastPose.pos).divideScalar(dt);const max=widthMm*2.5;if(velocity.length()>max)velocity.setLength(max);if(velocity.length()<widthMm*.035)velocity.set(0,0,0);velocity.lerp(lastPose.velocity,.45);}
+ const center=new THREE.Vector3(...rotApply(R,[CANON_CENTER[0]*scaleM,CANON_CENTER[1]*scaleM,CANON_CENTER[2]*scaleM],[0,0,0])).add(new THREE.Vector3(T[0],T[1],T[2]));
+ pose={pos,q:gq,faceQ:filteredQ.clone(),px,width:widthMm,height:heightMm,fwd:fwd.clone(),center,velocity,t,rms:sol.rms};lastPose=pose;
+ // 오클루더: 화면상 위치는 실제 랜드마크(영상과 정합), 깊이는 자세 적용된 정준 모델에서 가져온다.
+ const pa=faceOcc.geometry.attributes.position.array,tmp=[0,0,0];for(let i=0;i<468;i++){posed(i,tmp);const Z=tmp[2],s=-Z/focalPx,p=lm[i];pa[i*3]=(p.x-.5)*vw*s-fwd.x*1.2;pa[i*3+1]=(.5-p.y)*vh*s-fwd.y*1.2;pa[i*3+2]=Z-fwd.z*1.2;}faceOcc.geometry.attributes.position.needsUpdate=true;
  message(calibration?'크기 보정 중입니다':Math.abs(yaw)>45?'측면은 추정 정확도가 낮아질 수 있습니다':'');
 }
 function applyPose(t){
@@ -4126,11 +4169,11 @@ function applyPose(t){
  glasses.visible=faceOcc.visible=headOcc.visible=showIt;
  if(!showIt){postQuad.material.uniforms.uFace.value=0;message('밝은 곳에서 얼굴을 화면 중앙에 맞춰주세요');return;}
  const lead=validFace?Math.min(.020,Math.max(0,(t-pose.t)/1000)):.0,delta=pose.velocity.clone().multiplyScalar(lead);
- glasses.position.copy(pose.pos).add(delta);glasses.quaternion.copy(pose.q);glasses.scale.setScalar(pose.px*1000);
+ glasses.position.copy(pose.pos).add(delta);glasses.quaternion.copy(pose.q);glasses.scale.setScalar(1000);
  faceOcc.position.copy(delta);
  headOcc.position.copy(pose.center).addScaledVector(pose.fwd,-pose.width*.43).add(delta);headOcc.quaternion.copy(pose.faceQ);headOcc.scale.set(pose.width*.48,pose.height*.60,pose.width*.58);
  glasses.updateMatrixWorld(true);
- updateFitProjection();updatePartVisibility();
+ updatePartVisibility();
  const u=postQuad.material.uniforms;u.uFace.value=clamp(1-(age-hold)/130,0,1);
  [[-25,-24,-9],[25,-24,-9],[0,-7,-9]].forEach((a,i)=>{const p=new THREE.Vector3(...a).multiplyScalar(.001).applyMatrix4(glasses.matrixWorld).project(cam);const w=(i===2?9:21)*pose.px/vw,h=(i===2?7:8)*pose.px/vh;u.uShadows.value[i].set(p.x*.5+.5,p.y*.5+.5,w,h);});
 }
@@ -4170,7 +4213,7 @@ function loop(t=performance.now(),token=session){
   else{glasses.visible=true;for(const m of materials)if(m.userData.trackUniforms)m.userData.trackUniforms.trackOpacity.value=1;if(!dragging&&t-(loop.lastDrag||0)>2500)previewYaw+=dt*.00007;glasses.quaternion.setFromEuler(new THREE.Euler(previewPitch,previewYaw,0,'YXZ'));glasses.position.set(0,0,30);glasses.scale.setScalar(1000);faceOcc.visible=headOcc.visible=false;}
   renderFrame();
   if(t-lastQuality>2500&&mode==='ar'){lastQuality=t;let next=renderRatio;if(frameDt>42)next=Math.max(.65,renderRatio-.15);else if(frameDt<24)next=Math.min(1.25,renderRatio+.1);if(Math.abs(next-renderRatio)>.01){renderRatio=next;resizeRender();}}
-  if(t-lastUI>500){lastUI=t;$('qualityBadge').textContent=mode==='preview'?'3D 제품 보기 · 드래그해서 회전':faceWidthCal?'크기 보정 적용':'스타일 체험 · 크기 추정';$('perfStatus').textContent=DEBUG?Math.round(1000/frameDt)+' fps · '+glc.width+'×'+glc.height:'';}
+  if(t-lastUI>500){lastUI=t;$('qualityBadge').textContent=mode==='preview'?'3D 제품 보기 · 드래그해서 회전':faceWidthCal?'크기 보정 적용':'스타일 체험 · 크기 추정';$('perfStatus').textContent=DEBUG?Math.round(1000/frameDt)+' fps · '+glc.width+'×'+glc.height+(pose?' · z '+Math.round(-pnp.T[2])+'mm · rms '+pose.rms.toFixed(1):''):'';}
  }catch(e){stopAR();errorUI(new Error('화면 처리 중 오류가 발생했습니다. 다시 열어주세요. '+e.message));return;}
  raf=requestAnimationFrame(t=>loop(t,token));
 }
@@ -4228,9 +4271,9 @@ function capture(){
 }
 function updateGalleryCount(){const e=$('count');e.replaceChildren();if(photos.length){const im=new Image();im.src=photos[photos.length-1].url;im.alt='최근 촬영';e.append(im);}const n=document.createElement('b');n.textContent=photos.length;e.append(n);e.classList.toggle('empty',!photos.length);}
 function renderGallery(){if(!photos.length)return;selected=clamp(selected,0,photos.length-1);$('bigimg').src=photos[selected].url;$('gcount').textContent=(selected+1)+' / '+photos.length;$('thumbs').replaceChildren();photos.forEach((p,i)=>{const im=new Image();im.src=p.url;im.alt='사진 '+(i+1);im.className=i===selected?'sel':'';im.onclick=()=>{selected=i;renderGallery();};$('thumbs').append(im);});}
-function resetMaterials(){for(const m of materials){if(m.userData.role==='lens'){m.userData.uniforms.uTransmission.value.set(...m.userData.originalTransmission);m.roughness=P.materials?.lens?.roughness??.10;}else if(m.userData.defaultColor){m.color.copy(m.userData.defaultColor);m.roughness=m.userData.defaultRoughness;}}updateMaterialControls();}
+function resetMaterials(){for(const m of materials){if(m.userData.role==='lens'){m.userData.uniforms.uTransmission.value.set(...m.userData.originalTransmission);m.roughness=P.materials?.lens?.roughness??.04;}else if(m.userData.defaultColor){m.color.copy(m.userData.defaultColor);m.roughness=m.userData.defaultRoughness;}}updateMaterialControls();}
 function updateMaterialControls(){const role=$('part').value,m=materials.find(m=>m.userData.role===role);if(!m)return;const c=role==='lens'?new THREE.Color(...m.userData.originalTransmission).convertLinearToSRGB():m.color.clone().convertLinearToSRGB();$('materialColor').value='#'+c.getHexString();$('roughness').value=Math.round(m.roughness*100);$('roughnessOut').textContent=$('roughness').value;}
-for(const k of Object.keys(defaults)){const e=$(k);e.value=k.includes('Adjust')?settings[k]:settings[k]*100;e.oninput=()=>{settings[k]=+e.value/(k.includes('Adjust')?1:100);$(k+'Out').textContent=e.value;if(k==='studio')updateMaterialLighting();};}
+for(const k of Object.keys(defaults)){const e=$(k);const raw=k.includes('Adjust')||k==='fov';e.value=raw?settings[k]:settings[k]*100;e.oninput=()=>{settings[k]=+e.value/(raw?1:100);$(k+'Out').textContent=e.value;if(k==='studio')updateMaterialLighting();if(k==='fov'&&renderer)updateCameraFov();};}
 function setLook(v){for(const k of ['studio','beauty','tone','shadow']){$(k).value=v[k]*100;$(k).oninput();}}
 $('originalLook').onclick=()=>setLook({studio:defaults.studio,beauty:0,tone:0,shadow:defaults.shadow});$('resetLook').onclick=()=>setLook(defaults);
 $('tune').onclick=()=>{$('settings').classList.toggle('open');updateMaterialControls();};
