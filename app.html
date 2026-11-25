@@ -53,6 +53,8 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 #msg span{background:rgba(0,0,0,.45);padding:8px 14px;border-radius:999px;display:inline-block}
 .topbar{position:absolute;top:calc(12px + env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
 .topbar button{pointer-events:auto;width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:20px}
+.homepill{pointer-events:auto;display:none;align-items:center;height:36px;padding:0 14px;border-radius:18px;background:rgba(0,0,0,.45);color:#fff;font-size:13px;text-decoration:none;white-space:nowrap}.homepill.on{display:inline-flex}.homepill.dark{background:var(--panel);color:var(--ink);border:1px solid var(--line)}
+.homebar{display:none;justify-content:center;padding:6px 24px calc(10px + env(safe-area-inset-bottom));background:var(--bg)}.homebar.on{display:flex}.homebar a{color:var(--ink2);font-size:14px;text-decoration:none;padding:8px 12px}
 .arbar{height:130px;padding-bottom:env(safe-area-inset-bottom);background:#000;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding-left:24px;padding-right:24px}
 #shutter{width:74px;height:74px;border-radius:50%;background:#fff;border:5px solid #000;box-shadow:0 0 0 3px #fff;justify-self:center}
 #shutter:active{transform:scale(.92)}
@@ -109,7 +111,8 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
     <div class="store" id="storeinfo"></div>
   </div>
   <div class="cta">
-    <button class="btn ghost" id="preview">3D 보기</button><button class="btn" id="tryon">착용해보기</button>
+    <button class="btn ghost" id="preview">3D 보기</button><button class="btn" id="tryon">착용해보기</button></div>
+  <div class="homebar"><a id="phome" href="#">‹ 홈페이지로 돌아가기</a>
   </div>
 </section>
 
@@ -119,7 +122,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
     <canvas id="gl"></canvas>
     <div id="flash"></div><div id="qualityBadge">스타일 체험 · 크기 추정</div>
     <div id="msg"><span>밝은 곳에서 정면을 봐주세요</span></div>
-    <div class="topbar"><button id="arback" aria-label="닫기">×</button><button id="tune" aria-label="화면 설정">☷</button></div>
+    <div class="topbar"><button id="arback" aria-label="닫기">×</button><a id="arhome" class="homepill" href="#">홈페이지로 돌아가기</a><button id="tune" aria-label="화면 설정">☷</button></div>
   </div>
   <div class="arbar">
     <span class="lbl" id="arname"></span>
@@ -129,7 +132,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 </section>
 
 <section id="gallery" class="screen">
-  <div class="gtop"><button id="gback" aria-label="뒤로">‹ 뒤로</button><h2>찍은 사진</h2><span id="gcount" style="color:var(--ink2);font-size:14px"></span></div>
+  <div class="gtop"><button id="gback" aria-label="뒤로">‹ 뒤로</button><a id="ghome" class="homepill dark" href="#">홈페이지</a><h2>찍은 사진</h2><span id="gcount" style="color:var(--ink2);font-size:14px"></span></div>
   <div id="big"><img id="bigimg" alt="촬영한 착용 사진"></div>
   <div id="thumbs"></div>
   <div class="gbar">
@@ -3820,7 +3823,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.3.5";
+const APP_VERSION="v2.4.4";
 const CATALOG={
   'LK-S001':{name:'스퀘어 아세테이트 선글라스',price:'89,000원',size:[50,20,145],img:'assets/LK-S001/thumb.jpg',glb:'assets/LK-S001/model.glb',
     fit:{faceWidthMm:153, up:-16, fwd:14, templeStretch:1.2, templeFadeStartMm:84, templeFadeEndMm:108}, lens:{tint:[0.391,0.385,0.417], reflect:1.0},
@@ -3849,7 +3852,16 @@ const FACE_TRIANGLES=[173,155,133,246,33,7,382,398,362,263,466,249,308,415,324,7
    Color maps: sRGB. Roughness/metalness/normal/AO: linear. Lens transmission: linear RGB.
    Optional per-SKU material maps and physical anchors are documented in README.md. */
 const $=id=>document.getElementById(id), query=new URLSearchParams(location.search);
-let CUR=CATALOG[query.get('sku')]?query.get('sku'):'LK-S001', P=CATALOG[CUR];
+let CUR='LK-S001', P=CATALOG[CUR];
+// 몰 연동: ?sku=상품코드&back=돌아갈주소&name=&price=&img=&auto=1
+const MALL_HOSTS=['lookoptical.kr','www.lookoptical.kr','m.lookoptical.kr','slowfun2u-dot.github.io','localhost','127.0.0.1'];
+function backURL(){const b=query.get('back');if(b){try{const u=new URL(b,location.href);if(MALL_HOSTS.includes(u.hostname)&&/^https?:$/.test(u.protocol))return u.href;}catch(_){}}return 'https://lookoptical.kr/';}
+const BACK=backURL(),MALL_NAME=query.get('name')||'',MALL_PRICE=query.get('price')||'',MALL_IMG=(()=>{const v=query.get('img');try{const u=new URL(v||'',location.href);return MALL_HOSTS.includes(u.hostname)?u.href:'';}catch(_){return '';}})();
+let skuMissing=false;
+// 스테이징(beta/) 지원: 자산은 항상 루트의 assets/ 를 공유. 상대경로 'assets/…'만 접두사 적용
+const ASSET_BASE=/\/beta\//.test(location.pathname)?'../':'';const A=u=>(typeof u==='string'&&u.startsWith('assets/'))?ASSET_BASE+u:u;
+async function loadCatalog(){try{const r=await fetch(A('assets/catalog.json')+'?_='+Date.now(),{cache:'no-store'});if(r.ok){const j=await r.json();for(const [k,v] of Object.entries(j)){if(v&&typeof v==='object')CATALOG[k]=v;}}}catch(e){dbg('catalog: '+(e.message||e));}
+ const want=query.get('sku');if(want){if(CATALOG[want]){CUR=want;}else{skuMissing=true;}}P=CATALOG[CUR];}
 const DEBUG=query.get('debug')==='1';
 const log=[];
 function dbg(s){log.push(String(s).slice(0,300));if(DEBUG){$('dbg').style.display='block';$('dbg').textContent=log.slice(-6).join('\n');}}
@@ -3892,11 +3904,14 @@ function errorUI(e){$('loading').classList.remove('on');$('camerrmsg').textConte
 function renderProduct(){
  settings.fov=clamp(P.fit.fovDeg??defaults.fov,50,90);$('fov').value=settings.fov;$('fovOut').textContent=$('fov').value;if(renderer)updateCameraFov();
  $('templeFade').checked=P.fit.templeFade!==false;$('farTemple').checked=P.fit.farTempleHide!==false;
- $('verbadge').textContent=APP_VERSION;$('pimg').src=P.img;$('pname').textContent=P.name;$('pprice').textContent=P.price;
+ $('verbadge').textContent=APP_VERSION;$('pimg').src=(skuMissing&&MALL_IMG)||A(P.img);$('pname').textContent=(skuMissing&&MALL_NAME)||P.name;$('pprice').textContent=(skuMissing&&MALL_PRICE)||P.price;
+ for(const id of ['phome','arhome','ghome']){$(id).href=BACK;}$('phome').parentElement.classList.toggle('on',true);$('arhome').classList.toggle('on',true);$('ghome').classList.toggle('on',true);
+
  for(let i=0;i<3;i++)$('s'+(i+1)).textContent=P.size[i]+'mm';
  $('storeinfo').textContent=(query.get('store')?'매장 '+query.get('store')+' · ':'')+'상품코드 '+CUR;
+ if(skuMissing){$('tryon').disabled=true;$('tryon').textContent='가상착용 준비 중';$('storeinfo').textContent='이 상품은 가상착용 준비 중입니다 · '+query.get('sku');}else{$('tryon').disabled=false;$('tryon').textContent='착용해보기';}
  $('arname').textContent=P.name.length>12?P.name.slice(0,12)+'…':P.name;
- const st=$('styles');st.replaceChildren();for(const [k,c] of Object.entries(CATALOG)){const b=document.createElement('button');b.className='stl'+(k===CUR?' sel':'');const im=new Image();im.src=c.img;im.alt=c.name;const name=document.createElement('b');name.textContent=c.name;const p=document.createElement('small');p.textContent=c.price;b.append(im,name,p);b.onclick=()=>{if(CUR!==k){stopAR();CUR=k;P=c;disposeModel();renderProduct();}};st.append(b);}
+ const st=$('styles');st.replaceChildren();for(const [k,c] of Object.entries(CATALOG)){const b=document.createElement('button');b.className='stl'+(k===CUR?' sel':'');const im=new Image();im.src=A(c.img);im.alt=c.name;const name=document.createElement('b');name.textContent=c.name;const p=document.createElement('small');p.textContent=c.price;b.append(im,name,p);b.onclick=()=>{if(CUR!==k){stopAR();CUR=k;P=c;disposeModel();renderProduct();}};st.append(b);}
 }
 class OneEuro{
  constructor(minCut=1.4,beta=.018){this.mc=minCut;this.beta=beta;this.reset();}
@@ -3976,7 +3991,7 @@ function resizeRender(){
  for(const m of lensMaterials){m.userData.uniforms.tBackdrop.value=sceneTarget.texture;m.userData.uniforms.uResolution.value.set(glc.width,glc.height);}
  skinCanvas.height=Math.round(skinCanvas.width*vh/vw);clearMask();
 }
-async function texture(url,color=false){if(!url)return null;const t=await new THREE.TextureLoader().loadAsync(url);t.flipY=false;t.encoding=color?THREE.sRGBEncoding:THREE.LinearEncoding;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());maps.push(t);return t;}
+async function texture(url,color=false){if(!url)return null;const t=await new THREE.TextureLoader().loadAsync(A(url));t.flipY=false;t.encoding=color?THREE.sRGBEncoding:THREE.LinearEncoding;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());maps.push(t);return t;}
 function makeLensMaterial(){
  const trans=P.materials?.lens?.transmissionRGB||linearColor(P.lens.tint).toArray();
  const u={tBackdrop:{value:sceneTarget.texture},uResolution:{value:new THREE.Vector2(glc.width,glc.height)},uTransmission:{value:new THREE.Vector3(...trans)},uDensity:{value:1},uGradient:{value:P.materials?.lens?.gradient||0},uLensReflect:{value:settings.studio},uIOR:{value:clamp(P.materials?.lens?.ior??1.5,1.01,2.4)},tDensity:{value:whiteTex},uLensBounds:{value:new THREE.Vector2(-23,23)}};
@@ -4062,7 +4077,7 @@ function updatePartVisibility(){
 }
 function disposeModel(){if(!glasses)return;scene.remove(glasses);const gs=new Set();glasses.traverse(o=>{if(o.geometry)gs.add(o.geometry);});gs.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());authoredMaterials.forEach(m=>m.dispose());maps.forEach(t=>t.dispose());materials=[];maps=[];authoredMaterials=[];lensMaterials=[];glasses=null;modelSku=null;}
 async function loadModel(){if(glasses&&modelSku===CUR)return;if(modelPromise)return modelPromise;
- modelPromise=(async()=>{disposeModel();const g=await new THREE.GLTFLoader().loadAsync(P.glb);glasses=g.scene;await prepareMaterials(glasses);glasses.visible=false;scene.add(glasses);modelSku=CUR;})();
+ modelPromise=(async()=>{disposeModel();const g=await new THREE.GLTFLoader().loadAsync(A(P.glb));glasses=g.scene;await prepareMaterials(glasses);glasses.visible=false;scene.add(glasses);modelSku=CUR;})();
  try{await modelPromise;}catch(e){disposeModel();throw new Error('제품 3D 모델을 준비하지 못했습니다. '+e.message);}finally{modelPromise=null;}
 }
 function updateMaterialLighting(){if(!renderer)return;for(const m of materials){if(m.userData.role==='decal')continue;m.envMapIntensity=m.userData.role==='lens'?.30+settings.studio*.45:.35+settings.studio*.60;if(m.userData.role==='lens')m.userData.uniforms.uLensReflect.value=.16+settings.studio*.52;}keyL.intensity=.75+settings.studio*.6;fillL.intensity=.24+settings.studio*.18;rimL.intensity=settings.studio*.5;}
@@ -4303,7 +4318,7 @@ let pointer=null;glc.addEventListener('pointerdown',e=>{if(mode!=='preview')retu
 function endDrag(){dragging=false;pointer=null;loop.lastDrag=performance.now();}glc.addEventListener('pointerup',endDrag);glc.addEventListener('pointercancel',endDrag);
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&(mode!=='idle'||starting)){stopAR();show('product');}});window.addEventListener('pagehide',()=>{stopAR();photos.forEach(p=>URL.revokeObjectURL(p.url));});
 window.addEventListener('resize',()=>{if(mode==='preview'){const s=$('stage').getBoundingClientRect();vw=Math.min(1280,Math.round(s.width*(devicePixelRatio||1)));vh=Math.max(1,Math.round(vw*s.height/s.width));resizeRender();}});
-renderProduct();
+loadCatalog().then(()=>{renderProduct();if(query.get('auto')==='1'&&!skuMissing){setTimeout(()=>{resetMaterials();startAR();},50);}});
 
 </script>
 </body></html>
