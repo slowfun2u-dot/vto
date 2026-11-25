@@ -1,0 +1,49 @@
+<!-- ============================================================
+ LOOKOPTICS AR 가상착용 연결 스크립트 (Cafe24 상품상세 스킨용)
+ 삽입 위치: 디자인관리 > 스킨 편집 > product/detail.html 의 </body> 바로 위 (반응형이 아니면 모바일 스킨 m/product/detail.html 에도 동일 삽입)
+ 동작: 상품 식별자(모델명 → 자체상품코드 → 상품번호)로 AR 서버의 catalog.json 을 조회해
+       AR 자산이 있으면 기존 "TRY ON IT" 버튼에 링크를 걸고, 없으면 버튼을 숨깁니다. 상품별 수정 불필요.
+ 외부 JS 로드 없음 · 고객 정보 전송 없음 · 실패 시 조용히 버튼만 숨김
+ ============================================================ -->
+<script>
+(function(){
+  var AR_BASE = 'https://slowfun2u-dot.github.io/vto/';
+  // Cafe24 치환자 (스킨 HTML 안에서만 동작). 모델명 예: "SF1096SLBK 001 58"
+  var modelName  = '{$model_name}';
+  var customCode = '{$custom_product_code}';
+  var productNo  = '{$product_no}';
+  var prodName   = '{$product_name}';
+  var price      = '{$product_price}';
+  function norm(s){ return (s||'').replace(/\{\$[^}]*\}/g,'').trim().replace(/\s+/g,'-').toUpperCase(); }
+  var meta = function(p){ var m=document.querySelector('meta[property="'+p+'"]'); return m?m.getAttribute('content'):''; };
+  var candidates = [norm(modelName), norm(customCode), norm(productNo), norm(meta('meta-product:productId'))].filter(Boolean);
+  // 실제 스킨: <a href="#" class="ar_link fm-fitting-btn" style="display:none"><img alt="TRY ON IT"></a>  (이미지 슬라이더 우상단, 기본 숨김)
+  var img = document.querySelector('img[alt="TRY ON IT"]');
+  var btn = document.querySelector('a.ar_link') || (img ? (img.closest('a') || img.parentElement) : null);
+  if (!btn || !candidates.length) return;
+  // 모델명 치환자가 비어 있으면 제목의 괄호 안 코드로 보완: "...(SF1096SLBK 001 58)"
+  if (!norm(modelName)) { var mm = (document.title || '').match(/\(([A-Z0-9][A-Z0-9 \-]+)\)/); if (mm) candidates.unshift(norm(mm[1])); }
+  btn.style.display = 'none';                            // 확인 전에는 숨김 (스킨 기본값과 동일)
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  if (ctrl) setTimeout(function(){ ctrl.abort(); }, 4000);
+  fetch(AR_BASE + 'assets/catalog.json?_=' + Date.now(), {cache:'no-store', signal: ctrl && ctrl.signal})
+    .then(function(r){ return r.ok ? r.json() : {}; })
+    .then(function(cat){
+      var key = null;
+      for (var i=0;i<candidates.length;i++){ if (cat && cat[candidates[i]]) { key = candidates[i]; break; } }
+      if (!key) { btn.style.display = 'none'; return; }
+      var og = meta('og:image');
+      var url = AR_BASE + '?sku=' + encodeURIComponent(key)
+              + '&auto=1'
+              + '&back=' + encodeURIComponent(location.href)
+              + '&name=' + encodeURIComponent(norm(prodName) ? prodName : document.title)
+              + '&price=' + encodeURIComponent(price && price.indexOf('{$')<0 ? price : '')
+              + (og ? '&img=' + encodeURIComponent(og) : '');
+      btn.setAttribute('href', url);
+      btn.setAttribute('target', '_self');
+      btn.setAttribute('aria-label', '가상착용 해보기');
+      btn.style.display = 'block'; btn.style.visibility = '';
+    })
+    .catch(function(){ btn.style.display = 'none'; });
+})();
+</script>

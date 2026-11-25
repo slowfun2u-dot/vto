@@ -1,0 +1,150 @@
+{
+ "SF1096SLBK-001-58": {
+  "name": "[연예인 착용] 페라가모 선글라스(SF1096SLBK 001 58)",
+  "price": "575,000원",
+  "size": [
+   56,
+   22,
+   145
+  ],
+  "img": "assets/SF1096SLBK-001-58/thumb.jpg",
+  "glb": "assets/SF1096SLBK-001-58/model.glb",
+  "fit": {
+   "faceWidthMm": 153,
+   "up": -15,
+   "fwd": 14,
+   "tiltDeg": 9.7,
+   "templeFadeStartMm": 107,
+   "templeFadeEndMm": 137,
+   "padAnchorsMm": [
+    [
+     -9,
+     -4,
+     -2
+    ],
+    [
+     9,
+     -4,
+     -2
+    ]
+   ]
+  },
+  "lens": {
+   "tint": [
+    0.477,
+    0.484,
+    0.538
+   ],
+   "reflect": 1.0
+  },
+  "materials": {
+   "lens": {
+    "gradient": 0.0,
+    "roughness": 0.04
+   }
+  },
+  "frame": {
+   "baseColor": [
+    0.0199,
+    0.021,
+    0.0242
+   ],
+   "gloss": 1.0,
+   "pattern": true
+  },
+  "frontTex": "assets/SF1096SLBK-001-58/front_tex.jpg",
+  "ao": {
+   "Front": "assets/SF1096SLBK-001-58/ao_front.png",
+   "Temple_L": "assets/SF1096SLBK-001-58/ao_temple_l.png",
+   "Temple_R": "assets/SF1096SLBK-001-58/ao_temple_r.png"
+  },
+  "decals": [],
+  "meta": {
+   "totalWidthMm": 150.0,
+   "tiltDeg": 9.7,
+   "rimDepthMm": [
+    4.19,
+    4.19
+   ],
+   "lensMm": 58.0,
+   "lensType": "tinted",
+   "registered": "2026-11-25",
+   "source": "photo-parametric",
+   "section": "flat"
+  }
+ },
+ "SD2088-1-134-51": {
+  "name": "산드로 안경테 SD2088-1 134 51",
+  "price": "295,000원",
+  "size": [
+   48,
+   20,
+   145
+  ],
+  "img": "assets/SD2088-1-134-51/thumb.jpg",
+  "glb": "assets/SD2088-1-134-51/model.glb",
+  "fit": {
+   "faceWidthMm": 153,
+   "up": -15,
+   "fwd": 14,
+   "tiltDeg": 8.8,
+   "templeFadeStartMm": 107,
+   "templeFadeEndMm": 137,
+   "padAnchorsMm": [
+    [
+     -9,
+     -4,
+     -2
+    ],
+    [
+     9,
+     -4,
+     -2
+    ]
+   ]
+  },
+  "lens": {
+   "tint": [
+    0.97,
+    0.97,
+    0.98
+   ],
+   "reflect": 1.0
+  },
+  "materials": {
+   "lens": {
+    "gradient": 0.0,
+    "roughness": 0.04
+   }
+  },
+  "frame": {
+   "baseColor": [
+    0.0478,
+    0.0342,
+    0.0303
+   ],
+   "gloss": 1.0,
+   "pattern": true
+  },
+  "frontTex": "assets/SD2088-1-134-51/front_tex.jpg",
+  "ao": {
+   "Front": "assets/SD2088-1-134-51/ao_front.png",
+   "Temple_L": "assets/SD2088-1-134-51/ao_temple_l.png",
+   "Temple_R": "assets/SD2088-1-134-51/ao_temple_r.png"
+  },
+  "decals": [],
+  "meta": {
+   "totalWidthMm": 134.0,
+   "tiltDeg": 8.8,
+   "rimDepthMm": [
+    3.77,
+    3.73
+   ],
+   "lensMm": 51.0,
+   "lensType": "clear",
+   "registered": "2026-11-25",
+   "source": "photo-parametric",
+   "section": "flat"
+  }
+ }
+}
