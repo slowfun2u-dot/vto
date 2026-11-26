@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LOOKOPTICS AR 테스트 카탈로그</title>
+<style>
+:root{--ink:#17191e;--bg:#f6f5f2;--card:#fff;--line:#e5e2dc;--accent:#8c6a3f}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,"Pretendard","Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink);padding:16px 16px 48px}
+h1{font-size:18px;margin:8px 0 2px}p.sub{font-size:12px;color:#6b6760;margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column}
+.card img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#fafaf9}
+.card .b{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px}
+.card .n{font-size:13px;font-weight:600;line-height:1.35;min-height:35px}
+.card .m{font-size:11px;color:#6b6760}
+.card a{display:block;text-align:center;background:var(--ink);color:#fff;text-decoration:none;font-size:13px;padding:9px;border-radius:9px;margin-top:4px}
+.card a.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:999px;background:#efe9df;color:var(--accent);margin-right:4px}
+#ver{font-size:11px;color:#9a958c;margin-top:18px}
+</style></head><body>
+<h1>AR 가상착용 테스트 카탈로그</h1>
+<p class="sub">폰에서 각 상품의 "가상착용"을 눌러 카메라 모드를 확인합니다. 실제 자사몰에서는 상세페이지의 TRY ON IT 버튼이 같은 링크로 연결됩니다.</p>
+<div class="grid" id="grid"></div>
+<div id="ver"></div>
+<script>
+(function(){
+  var base = location.pathname.replace(/[^/]*$/, '');
+  fetch(base + 'assets/catalog.json?_=' + Date.now(), {cache:'no-store'}).then(function(r){return r.json();}).then(function(cat){
+    var g = document.getElementById('grid'); var n = 0;
+    Object.keys(cat).forEach(function(k){
+      var p = cat[k]; n++;
+      var meta = p.meta || {}; var src = meta.source || '';
+      var card = document.createElement('div'); card.className = 'card';
+      card.innerHTML = '<img src="' + base + p.img + '" alt="">'
+        + '<div class="b"><div class="n">' + (p.name || k) + '</div>'
+        + '<div class="m">' + (p.size ? p.size.join('-') : '') + (p.price ? ' · ' + p.price : '') + '</div>'
+        + '<div>' + (src ? '<span class="tag">' + src + '</span>' : '') + (meta.section ? '<span class="tag">' + meta.section + '</span>' : '') + '</div>'
+        + '<a href="' + base + '?sku=' + encodeURIComponent(k) + '&auto=1&back=' + encodeURIComponent(location.href) + '">가상착용</a>'
+        + '<a class="g" href="' + base + '?sku=' + encodeURIComponent(k) + '&back=' + encodeURIComponent(location.href) + '">상품 보기</a></div>';
+      g.appendChild(card);
+    });
+    document.getElementById('ver').textContent = n + '개 상품 · catalog.json 기준 · ' + new Date().toLocaleString('ko-KR');
+  }).catch(function(e){ document.getElementById('ver').textContent = '카탈로그를 불러오지 못했습니다: ' + e; });
+})();
+</script>
+</body></html>

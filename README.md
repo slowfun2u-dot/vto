@@ -63,3 +63,8 @@ GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래
 ## 미해결 (다음 단계)
 - 형태 정확도 미인증: 모델은 사진 2장 기반, 템플 90mm. 도면/CAD 기반 모델 교체 필요
 - SKU 등록 도구(사진+사이즈 → 자동 생성) 미구축
+
+## 테스트 카탈로그 (v2.4.5)
+- `test.html` — catalog.json의 모든 SKU를 카드로 보여주고 "가상착용"(auto=1) / "상품 보기"로 연결. 폰 테스트용.
+- CAD 경로: `sku_pipeline/cad_measure.py <도면.pdf> --tilt --front-angle` → measure.json → `build.py params_cad.json` → `ao_bake.py` → `render.py` → `cad_register.py --key ... --site ...`
+- 데칼: catalog `decals[]`에 `visible:true, rot:[x,y,z], parent:'Temple_R', depth`를 주면 표면 장식(힌지 로고 등)으로 항상 표시되고 템플과 함께 페이드/가림 처리됨.
