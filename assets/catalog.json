@@ -193,19 +193,19 @@
    "parts": {
     "Temple_L_Gancini": {
      "color": [
-      0.86,
-      0.7,
-      0.42
+      0.88,
+      0.74,
+      0.46
      ],
-     "roughness": 0.22
+     "roughness": 0.18
     },
     "Temple_R_Gancini": {
      "color": [
-      0.86,
-      0.7,
-      0.42
+      0.88,
+      0.74,
+      0.46
      ],
-     "roughness": 0.22
+     "roughness": 0.18
     }
    }
   },
