@@ -249,7 +249,7 @@
   "name": "[연예인 착용] 페라가모 선글라스(SF1098SLBK 001 58)",
   "price": "575,000원",
   "size": [
-   58,
+   57,
    20,
    145
   ],
@@ -259,7 +259,7 @@
    "faceWidthMm": 153,
    "up": -15,
    "fwd": 14,
-   "tiltDeg": 11.0,
+   "tiltDeg": 9.9,
    "templeFadeStartMm": 107,
    "templeFadeEndMm": 137,
    "padAnchorsMm": [
@@ -277,23 +277,23 @@
   },
   "lens": {
    "tint": [
-    0.3,
-    0.3,
-    0.32
+    0.459,
+    0.468,
+    0.483
    ],
    "reflect": 1.0
   },
   "materials": {
    "lens": {
-    "gradient": 0.0,
+    "gradient": 0.06,
     "roughness": 0.04
    }
   },
   "frame": {
    "baseColor": [
-    0.012,
-    0.012,
-    0.013
+    0.021,
+    0.021,
+    0.0199
    ],
    "gloss": 1.0,
    "pattern": false
@@ -306,14 +306,17 @@
   "decals": [],
   "meta": {
    "totalWidthMm": 151.0,
+   "tiltDeg": 9.9,
+   "rimDepthMm": [
+    3.63,
+    3.63
+   ],
    "lensMm": 58.0,
+   "lensType": "tinted",
    "registered": "2026-11-26",
-   "source": "cad+photo",
-   "cad": "sf2830s.pdf",
+   "source": "photo",
    "section": "flat",
-   "T": 4.2,
-   "tiltDeg": 11.0,
-   "wrapR": 200.0,
+   "rimColorSpread": 0.99,
    "mallUrl": "https://lookoptical.kr/product/%EC%97%B0%EC%98%88%EC%9D%B8-%EC%B0%A9%EC%9A%A9-%ED%8E%98%EB%9D%BC%EA%B0%80%EB%AA%A8-%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4sf1098slbk-001-58/2632/category/50/display/1/",
    "productNo": 2632
   },
