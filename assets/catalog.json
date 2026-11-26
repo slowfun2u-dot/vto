@@ -146,5 +146,76 @@
    "source": "photo-parametric",
    "section": "flat"
   }
+ },
+ "SF2132SLBK": {
+  "name": "페라가모 선글라스 SF2132SLBK (SF-1715S)",
+  "price": "",
+  "size": [
+   54,
+   21,
+   145
+  ],
+  "img": "assets/SF2132SLBK/thumb.jpg",
+  "glb": "assets/SF2132SLBK/model.glb",
+  "fit": {
+   "faceWidthMm": 153,
+   "up": -15,
+   "fwd": 14,
+   "tiltDeg": 8.0,
+   "templeFadeStartMm": 107,
+   "templeFadeEndMm": 137,
+   "padAnchorsMm": [
+    [
+     -9,
+     -4,
+     -2
+    ],
+    [
+     9,
+     -4,
+     -2
+    ]
+   ]
+  },
+  "lens": {
+   "tint": [
+    0.55,
+    0.47,
+    0.42
+   ],
+   "reflect": 1.0
+  },
+  "materials": {
+   "lens": {
+    "gradient": 1.2,
+    "roughness": 0.04
+   }
+  },
+  "frame": {
+   "baseColor": [
+    0.09,
+    0.03,
+    0.03
+   ],
+   "gloss": 1.0,
+   "pattern": false
+  },
+  "ao": {
+   "Front": "assets/SF2132SLBK/ao_front.png",
+   "Temple_L": "assets/SF2132SLBK/ao_temple_l.png",
+   "Temple_R": "assets/SF2132SLBK/ao_temple_r.png"
+  },
+  "decals": [],
+  "meta": {
+   "totalWidthMm": 146.0,
+   "lensMm": 54.0,
+   "registered": "2026-11-26",
+   "source": "cad+photo",
+   "cad": "sf1715s.pdf",
+   "section": "flat",
+   "T": 3.79,
+   "tiltDeg": 8.0,
+   "wrapR": 419.0
+  }
  }
 }
