@@ -1,4 +1,4 @@
-# LOOKOPTICS AR v2.4.5
+# LOOKOPTICS AR v2.5.0
 
 v2.1 리뷰의 보완 항목을 반영한 최종본. 구조(세션 토큰·추론 watchdog·sRGB 색 파이프라인·468점 오클루더·RGBE 환경맵·재질 JSON)는 v2.1 그대로 유지.
 
@@ -11,7 +11,7 @@ assets/LK-S001/         SKU별 자산
 ```
 GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래그 가능). 새 SKU는 `assets/<SKU>/` 폴더와 `CATALOG` 항목 하나를 추가하면 된다.
 
-## v2.4.5
+## v2.5.0
 - 단면 자동 판독 규칙 적용: 정면 림 밝기(균일 어두움+좁은 띠)로 평판형/베개형 분류 → SF1096S는 평판형(두께 3.2, 모서리 R≤1.2, 렌즈 베벨 0.5)으로 재생성
 - 템플: 근·원 템플 분기에서 더 길게 이어지는 가지 선택 + 접합부 두께 평활
 
@@ -64,7 +64,11 @@ GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래
 - 형태 정확도 미인증: 모델은 사진 2장 기반, 템플 90mm. 도면/CAD 기반 모델 교체 필요
 - SKU 등록 도구(사진+사이즈 → 자동 생성) 미구축
 
-## 테스트 카탈로그 (v2.4.5)
+## 테스트 카탈로그 (v2.5.0)
 - `test.html` — catalog.json의 모든 SKU를 카드로 보여주고 "가상착용"(auto=1) / "상품 보기"로 연결. 폰 테스트용.
 - CAD 경로: `sku_pipeline/cad_measure.py <도면.pdf> --tilt --front-angle` → measure.json → `build.py params_cad.json` → `ao_bake.py` → `render.py` → `cad_register.py --key ... --site ...`
 - 데칼: catalog `decals[]`에 `visible:true, rot:[x,y,z], parent:'Temple_R', depth`를 주면 표면 장식(힌지 로고 등)으로 항상 표시되고 템플과 함께 페이드/가림 처리됨.
+
+## v2.5.0 — 자사몰 모드
+- `?sku=` 로 열리면 자사몰 모드: 다른 모델 목록 숨김, "이 상품 페이지로 돌아가기"(상품별 `meta.mallUrl` 또는 `back` 파라미터), AR 화면 하단 "비슷한 상품" 시트에서 바로 모델 교체(카메라 유지). 유사상품은 catalog `similar: [key,...]` (현재 수동, 추후 자사몰 스캔으로 자동 생성).
+- CAD 경로 2단계: `cad_measure2.py <pdf> --front-photo --side-photo` — CAD 윤곽(1단계) 후 사진 실루엣으로 정합(접힌 템플 끝·치수선·힌지 슬롯 제거).
