@@ -189,6 +189,24 @@
    "lens": {
     "gradient": 1.2,
     "roughness": 0.04
+   },
+   "parts": {
+    "Temple_L_Gancini": {
+     "color": [
+      0.86,
+      0.7,
+      0.42
+     ],
+     "roughness": 0.22
+    },
+    "Temple_R_Gancini": {
+     "color": [
+      0.86,
+      0.7,
+      0.42
+     ],
+     "roughness": 0.22
+    }
    }
   },
   "frame": {
@@ -205,42 +223,7 @@
    "Temple_L": "assets/SF2132SLBK/ao_temple_l.png",
    "Temple_R": "assets/SF2132SLBK/ao_temple_r.png"
   },
-  "decals": [
-   {
-    "name": "logo_R",
-    "img": "assets/SF2132SLBK/logo.png",
-    "x": 69.7,
-    "y": 6.4,
-    "z": -17.0,
-    "w": 14.0,
-    "h": 6.78,
-    "rot": [
-     0,
-     90,
-     0
-    ],
-    "visible": true,
-    "parent": "Temple_R",
-    "depth": 15
-   },
-   {
-    "name": "logo_L",
-    "img": "assets/SF2132SLBK/logo.png",
-    "x": -69.7,
-    "y": 6.4,
-    "z": -17.0,
-    "w": 14.0,
-    "h": 6.78,
-    "rot": [
-     0,
-     -90,
-     0
-    ],
-    "visible": true,
-    "parent": "Temple_L",
-    "depth": 15
-   }
-  ],
+  "decals": [],
   "meta": {
    "totalWidthMm": 146.0,
    "lensMm": 54.0,
