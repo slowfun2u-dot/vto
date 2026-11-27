@@ -1,4 +1,4 @@
-# LOOKOPTICS AR v2.5.2
+# LOOKOPTICS AR v2.5.3
 
 v2.1 리뷰의 보완 항목을 반영한 최종본. 구조(세션 토큰·추론 watchdog·sRGB 색 파이프라인·468점 오클루더·RGBE 환경맵·재질 JSON)는 v2.1 그대로 유지.
 
@@ -10,6 +10,10 @@ assets/LK-S001/         SKU별 자산
   model.glb  thumb.jpg  ao_front.png  ao_temple_l.png  ao_temple_r.png  front_tex.jpg  pad_l.png  pad_r.png
 ```
 GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래그 가능). 새 SKU는 `assets/<SKU>/` 폴더와 `CATALOG` 항목 하나를 추가하면 된다.
+
+## v2.5.3
+- 스튜디오 반사광 교체: 사각 카드 → 상단 타원 소프트박스(핫스팟·페더) + 좌우 테이퍼 스트립 + 정면 확산판 + 상단 스윕.
+- 템플 엔드피스 끝 정렬, 렌즈 1mm 안쪽 장착(빌드 공통).
 
 ## v2.5.2
 - 초기 착용 크기 전역 보정 0.88 (10~15% 크게 보이던 문제). URL `&size=0.85` 로 즉시 비교, 상품별 `fit.sizeAdj` 로 개별 보정.

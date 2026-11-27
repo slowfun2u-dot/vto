@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.5.2";
+const APP_VERSION="v2.5.3";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3974,8 +3974,20 @@ function microRoughness(){
 function makeEnvironment(){
  // Neutral studio light cards in linear floating-point radiance, prefiltered for roughness.
  const W=512,H=256,a=new Uint8Array(W*H*4);
- function rect(u,v,cx,cy,rx,ry,soft){const x=Math.max(0,Math.abs(u-cx)-rx),y=Math.max(0,Math.abs(v-cy)-ry);return Math.exp(-(x*x+y*y)/(soft*soft));}
- for(let y=0;y<H;y++)for(let x=0;x<W;x++){const u=x/W,v=y/H,i=(y*W+x)*4;const ambient=.035+.055*(1-v);const top=rect(u,v,.50,.21,.115,.025,.018)*4.5;const left=rect(u,v,.21,.46,.017,.145,.014)*2.5;const right=rect(u,v,.78,.44,.012,.12,.012)*3.0;const front=rect(u,v,.49,.44,.08,.06,.045)*.30;const rgb=[ambient+top+left*.97+right*1.03+front,ambient+top+left+right+front,ambient+top+left*1.04+right*.96+front];const e=Math.ceil(Math.log2(Math.max(...rgb))),scale=256/Math.pow(2,e);for(let c=0;c<3;c++)a[i+c]=Math.min(255,Math.round(rgb[c]*scale));a[i+3]=e+128;}
+ // 스튜디오 조명(제품 촬영 세팅): 딱딱한 사각 카드 대신 — 상단 대형 타원 소프트박스(중앙 핫스팟→가장자리 페더),
+ // 좌·우 스트립 라이트(길이 방향으로 끝이 가늘게 사라지는 테이퍼), 정면 확산판, 바닥 반사 그라데이션. 유광 아세테이트에 길고 부드러운 하이라이트가 맺힌다.
+ const sm=(e0,e1,x)=>{const t=Math.min(1,Math.max(0,(x-e0)/(e1-e0)));return t*t*(3-2*t);};
+ const du=(u,c)=>{let d=Math.abs(u-c);return Math.min(d,1-d);};
+ function ellipse(u,v,cx,cy,rx,ry,feather){const r=Math.hypot(du(u,cx)/rx,(v-cy)/ry);return 1-sm(1-feather,1+feather,r);}
+ function strip(u,v,cx,cy,w,len,taper){const x=du(u,cx)/w,y=Math.abs(v-cy)/len;const across=Math.exp(-x*x*1.6);const along=1-sm(1-taper,1,y);return across*along*(.55+.45*Math.cos(Math.min(1,y)*Math.PI*.5));}
+ for(let y=0;y<H;y++)for(let x=0;x<W;x++){const u=x/W,v=y/H,i=(y*W+x)*4;
+  const ambient=.028+.05*(1-v)+.035*sm(.62,.95,v);                                   // 위는 살짝 밝게, 바닥 반사 그라데이션
+  const topBox=ellipse(u,v,.50,.19,.20,.075,.40)*(3.4+2.6*Math.exp(-(Math.pow(du(u,.5)/.07,2)+Math.pow((v-.19)/.03,2))));  // 타원 소프트박스 + 중앙 핫스팟
+  const keyL=strip(u,v,.235,.45,.011,.20,.45)*3.2, rimR=strip(u,v,.775,.43,.008,.17,.5)*2.6;  // 좌 키 스트립, 우 림 스트립
+  const fill=Math.exp(-(Math.pow(du(u,.49)/.11,2)+Math.pow((v-.47)/.09,2)))*.32;      // 정면 확산판(아주 부드럽게)
+  const sweep=Math.exp(-Math.pow((v-.33)/.05,2))*(.5+.5*Math.cos(du(u,.5)*Math.PI*1.6))*.45*(du(u,.5)<.31?1:0);  // 상단 스윕(렌즈에 위→아래 부드러운 그라데이션)
+  const rgb=[ambient+topBox*.99+keyL*.985+rimR*1.02+fill+sweep,ambient+topBox+keyL+rimR+fill+sweep,ambient+topBox*1.02+keyL*1.03+rimR*.97+fill+sweep];
+  const e=Math.ceil(Math.log2(Math.max(...rgb))),scale=256/Math.pow(2,e);for(let c=0;c<3;c++)a[i+c]=Math.min(255,Math.round(rgb[c]*scale));a[i+3]=e+128;}
  // RGBE8 has no float upload/filter extension dependency. r128 PMREM preserves RGBE encoding.
  const tex=new THREE.DataTexture(a,W,H,THREE.RGBAFormat,THREE.UnsignedByteType);tex.encoding=THREE.RGBEEncoding;tex.minFilter=tex.magFilter=THREE.NearestFilter;tex.mapping=THREE.EquirectangularReflectionMapping;tex.needsUpdate=true;
  const pm=new THREE.PMREMGenerator(renderer);try{envTarget=pm.fromEquirectangular(tex);renderer.setRenderTarget(envTarget);const gl=renderer.getContext();if(gl.checkFramebufferStatus(gl.FRAMEBUFFER)!==gl.FRAMEBUFFER_COMPLETE)throw new Error('환경맵 생성 실패');}finally{renderer.setRenderTarget(null);tex.dispose();pm.dispose();}
