@@ -1,4 +1,4 @@
-# LOOKOPTICS AR v2.6.6
+# LOOKOPTICS AR v2.6.7
 
 v2.1 리뷰의 보완 항목을 반영한 최종본. 구조(세션 토큰·추론 watchdog·sRGB 색 파이프라인·468점 오클루더·RGBE 환경맵·재질 JSON)는 v2.1 그대로 유지.
 
@@ -10,6 +10,10 @@ assets/LK-S001/         SKU별 자산
   model.glb  thumb.jpg  ao_front.png  ao_temple_l.png  ao_temple_r.png  front_tex.jpg  pad_l.png  pad_r.png
 ```
 GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래그 가능). 새 SKU는 `assets/<SKU>/` 폴더와 `CATALOG` 항목 하나를 추가하면 된다.
+
+## v2.6.7
+- 템플: 귀 뒤 꺾이는 팁은 어떤 각도에서도 그리지 않음(fit.templeBendMm, 등록 시 측면 프로파일에서 산출). 정면 = 꺾임−30mm, 회전 시 최대 꺾임 지점까지 + 끝 14mm 그라데이션.
+- 노즈패드: 별도 부품(NosePad_L/R) 투명 그레이(사진 판독, opacity .55) → 렌즈 너머로 보임.
 
 ## v2.6.6+ (SF1098 nosepad)
 - 일체형 아세테이트 노즈패드: 시트 단면(1:1) 그대로, 프론트 뒷면 노즈 컷아웃 가장자리에서 얼굴 쪽 돌출, 앞면~팁 13.8mm, 높이 구간 +7~-9mm, 끝단 라운드. 빌드 파라미터 `nosePad`.

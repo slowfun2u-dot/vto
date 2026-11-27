@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.6.6";
+const APP_VERSION="v2.6.7";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -4136,7 +4136,8 @@ function updatePartVisibility(){
  glasses.traverse(o=>{if(!o.isMesh)return;const m=o.material,u=m.userData.trackUniforms;if(!u)return;
  u.templeFade.value=mode==='ar'&&$('templeFade').checked&&m.userData.temple?1:0;
  // 고개를 돌리면 템플을 최대 30mm 더 보여주고, 끝은 14mm 그라데이션으로 자연스럽게 사라짐. 정면은 기존처럼 깔끔한 컷
- if(m.userData.temple){const k=THREE.MathUtils.smoothstep(Math.abs(yaw),.10,.45);const base=(P.fit.templeFadeStartMm??107);u.templeStart.value=base+30*k;u.templeEnd.value=u.templeStart.value+(1.2+12.8*k);}
+ // 귀 뒤로 꺾이는 팁은 어떤 각도에서도 그리지 않음: 보이는 끝 E ≤ 꺾임 시작(templeBendMm). 정면 E = 꺾임−30, 고개 회전 시 최대 +30mm, 끝 14mm 그라데이션
+ if(m.userData.temple){const k=THREE.MathUtils.smoothstep(Math.abs(yaw),.10,.45);const bend=P.fit.templeBendMm??Math.min(P.fit.templeFadeStartMm??107,107);const E=bend-30+30*k,G=1.2+12.8*k;u.templeStart.value=E-G;u.templeEnd.value=E;}
  u.cameraMatch.value=mode==='ar'?settings.cameraMatch:0;u.cameraNoise.value=look.noise;u.noiseTime.value=Math.floor(performance.now()/50);u.partOpacity.value=1;
  if(mode==='ar'&&$('farTemple').checked&&m.userData.temple){const side=/_L/.test(o.name)?-1:1;u.partOpacity.value=1-THREE.MathUtils.smoothstep(side*yaw,.18,.42);}
  if(o.userData.padPart)o.visible=$('padMode').value!=='photo';

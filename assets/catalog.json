@@ -27,7 +27,8 @@
      -4,
      -2
     ]
-   ]
+   ],
+   "templeBendMm": 100
   },
   "lens": {
    "tint": [
@@ -106,7 +107,8 @@
      -4,
      -2
     ]
-   ]
+   ],
+   "templeBendMm": 100
   },
   "lens": {
    "tint": [
@@ -180,7 +182,8 @@
      -4,
      -2
     ]
-   ]
+   ],
+   "templeBendMm": 100
   },
   "lens": {
    "tint": [
@@ -254,7 +257,7 @@
    145
   ],
   "img": "assets/SF1098SLBK-001-58/thumb.jpg",
-  "glb": "assets/SF1098SLBK-001-58/model.glb?v=269",
+  "glb": "assets/SF1098SLBK-001-58/model.glb?v=267b",
   "fit": {
    "faceWidthMm": 153,
    "up": -15,
@@ -273,7 +276,8 @@
      -4,
      -2
     ]
-   ]
+   ],
+   "templeBendMm": 100.0
   },
   "lens": {
    "tint": [
@@ -287,6 +291,14 @@
    "lens": {
     "gradient": 0.06,
     "roughness": 0.04
+   },
+   "pad": {
+    "color": [
+     0.14,
+     0.14,
+     0.15
+    ],
+    "opacity": 0.55
    }
   },
   "frame": {
@@ -318,7 +330,7 @@
    "productNo": 2632,
    "design": "SF-2830S_Detail.pdf",
    "material": "ZYL",
-   "nosePad": "integrated acetate; sheet section, photo D-profile, scaled 0.8 depth / 0.85 width"
+   "nosePad": "clear grey acetate pads (photo), sheet section"
   },
   "similar": [
    "SF1096SLBK-001-58",
