@@ -1,4 +1,4 @@
-# LOOKOPTICS AR v2.5.0
+# LOOKOPTICS AR v2.5.2
 
 v2.1 리뷰의 보완 항목을 반영한 최종본. 구조(세션 토큰·추론 watchdog·sRGB 색 파이프라인·468점 오클루더·RGBE 환경맵·재질 JSON)는 v2.1 그대로 유지.
 
@@ -10,6 +10,14 @@ assets/LK-S001/         SKU별 자산
   model.glb  thumb.jpg  ao_front.png  ao_temple_l.png  ao_temple_r.png  front_tex.jpg  pad_l.png  pad_r.png
 ```
 GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래그 가능). 새 SKU는 `assets/<SKU>/` 폴더와 `CATALOG` 항목 하나를 추가하면 된다.
+
+## v2.5.2
+- 초기 착용 크기 전역 보정 0.88 (10~15% 크게 보이던 문제). URL `&size=0.85` 로 즉시 비교, 상품별 `fit.sizeAdj` 로 개별 보정.
+- SF1098SLBK: 브릿지 중앙 이음선 제거 (두 렌즈 곡면 soft-min 연결, 반쪽 도면 이음점 스냅).
+
+## v2.5.1
+- 앱 내부 브라우저(카카오톡·라인·인스타·페북·네이버앱) 대응: 안내창 대신 기본 브라우저로 자동 전환 (카카오 openExternal / 라인 openExternalBrowser / Android Chrome intent). 전환 수단이 없는 iOS 인스타·페북만 안내창 유지.
+- `auto=1` 로 들어온 웹뷰는 페이지 진입 시 1회 자동 전환 시도.
 
 ## v2.5.0
 - 단면 자동 판독 규칙 적용: 정면 림 밝기(균일 어두움+좁은 띠)로 평판형/베개형 분류 → SF1096S는 평판형(두께 3.2, 모서리 R≤1.2, 렌즈 베벨 0.5)으로 재생성

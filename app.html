@@ -158,7 +158,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 <div id="dbg" style="position:fixed;left:0;right:0;bottom:0;z-index:999;background:rgba(160,0,0,.92);color:#fff;font:12px/1.4 monospace;padding:8px 10px;display:none;max-height:40vh;overflow:auto;white-space:pre-wrap"></div>
 <div class="overlay" id="loading"><div class="spinner"></div><h3>준비 중</h3><p id="loadmsg">얼굴 인식 모델을 불러오는 중입니다</p></div>
-<div class="overlay" id="inapp"><h3>브라우저에서 열어주세요</h3><p>일부 앱 내부 브라우저에서는 카메라 사용이 제한될 수 있습니다. 오른쪽 위 메뉴에서 "다른 브라우저로 열기"를 눌러주세요.</p><button class="btn ghost" id="copylink">링크 복사</button><button class="btn ghost" id="inappclose">그래도 계속</button></div>
+<div class="overlay" id="inapp"><h3>브라우저에서 열어주세요</h3><p id="inappmsg">앱 안의 브라우저에서는 카메라를 쓸 수 없습니다. 아래 버튼으로 기본 브라우저에서 열어주세요.</p><button class="btn" id="inappopen">브라우저로 열기</button><button class="btn ghost" id="copylink">링크 복사</button><button class="btn ghost" id="inappclose">그래도 계속</button></div>
 <div class="overlay" id="camerr"><h3>카메라를 열 수 없습니다</h3><p id="camerrmsg"></p><button class="btn ghost" id="camerrclose">돌아가기</button></div>
 
 <div id="settings" class="settings" aria-label="화면과 착용 설정">
@@ -3836,7 +3836,20 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.5.0";
+const APP_VERSION="v2.5.2";
+// ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
+//  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
+const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
+function escapeWebview(){
+ const here=location.href;let target=null;
+ if(/KAKAOTALK/i.test(UA))target='kakaotalk://web/openExternal?url='+encodeURIComponent(here);
+ else if(/Line\//i.test(UA))target=here+(here.includes('?')?'&':'?')+'openExternalBrowser=1';
+ else if(IS_ANDROID)target='intent://'+location.host+location.pathname+location.search+'#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url='+encodeURIComponent(here)+';end';
+ if(!target)return Promise.resolve(false);
+ return new Promise(res=>{const t0=Date.now();const onHide=()=>{document.removeEventListener('visibilitychange',onHide);res(true);};document.addEventListener('visibilitychange',onHide);
+  try{location.href=target;}catch(_){}
+  setTimeout(()=>{document.removeEventListener('visibilitychange',onHide);res(document.hidden||Date.now()-t0>2500);},1800);});   // 1.8초 내 화면이 안 바뀌면 실패 → 안내창
+}
 const CATALOG={
   'LK-S001':{name:'스퀘어 아세테이트 선글라스',price:'89,000원',size:[50,20,145],img:'assets/LK-S001/thumb.jpg',glb:'assets/LK-S001/model.glb',
     fit:{faceWidthMm:153, up:-16, fwd:14, templeStretch:1.2, templeFadeStartMm:84, templeFadeEndMm:108}, lens:{tint:[0.391,0.385,0.417], reflect:1.0},
@@ -3871,7 +3884,12 @@ const MALL_HOSTS=['lookoptical.kr','www.lookoptical.kr','m.lookoptical.kr','slow
 function backURL(){const b=query.get('back');if(b){try{const u=new URL(b,location.href);if(MALL_HOSTS.includes(u.hostname)&&/^https?:$/.test(u.protocol))return u.href;}catch(_){}}return 'https://lookoptical.kr/';}
 const BACK=backURL(),MALL_NAME=query.get('name')||'',MALL_PRICE=query.get('price')||'',MALL_IMG=(()=>{const v=query.get('img');try{const u=new URL(v||'',location.href);return MALL_HOSTS.includes(u.hostname)?u.href:'';}catch(_){return '';}})();
 let skuMissing=false;
-const MALL_MODE=!!query.get('sku');const ENTRY_SKU=query.get('sku');
+// 초기 착용 크기 보정: 얼굴 폭 추정이 작게 잡혀 안경이 10~15% 크게 보이는 문제 → 전역 0.88. ?size=0.85 로 덮어쓰기, 상품별 fit.sizeAdj 곱
+const SIZE_TRIM=(()=>{const v=parseFloat(query.get('size'));return Number.isFinite(v)&&v>0.6&&v<1.4?v:0.88;})();
+function sizeTrim(){return SIZE_TRIM*((P&&P.fit&&Number.isFinite(P.fit.sizeAdj))?P.fit.sizeAdj:1);}
+const MALL_MODE=!!query.get('sku');
+if(IN_APP&&query.get('auto')==='1'&&!sessionStorage.getItem('vto_esc')){try{sessionStorage.setItem('vto_esc','1');}catch(_){}escapeWebview();}
+const ENTRY_SKU=query.get('sku');
 function productBackInfo(k){const c=CATALOG[k];if(k===ENTRY_SKU&&BACK&&query.get('back'))return {url:BACK,product:true};const u=c&&c.meta&&c.meta.mallUrl;if(u){try{const x=new URL(u);if(MALL_HOSTS.includes(x.hostname))return {url:x.href,product:true};}catch(_){}}return {url:BACK,product:false};}
 function productBack(k){return productBackInfo(k).url;}
 function similarOf(k){const c=CATALOG[k];const list=(c&&Array.isArray(c.similar)?c.similar:[]).filter(s=>s!==k&&CATALOG[s]);return list;}
@@ -4221,7 +4239,7 @@ function applyPose(t){
  glasses.visible=faceOcc.visible=headOcc.visible=showIt;
  if(!showIt){postQuad.material.uniforms.uFace.value=0;message('밝은 곳에서 얼굴을 화면 중앙에 맞춰주세요');return;}
  const lead=validFace?Math.min(.020,Math.max(0,(t-pose.t)/1000)):.0,delta=pose.velocity.clone().multiplyScalar(lead);
- glasses.position.copy(pose.pos).add(delta);glasses.quaternion.copy(pose.q);glasses.scale.setScalar(1000);
+ glasses.position.copy(pose.pos).add(delta);glasses.quaternion.copy(pose.q);glasses.scale.setScalar(1000*sizeTrim());
  faceOcc.position.copy(delta);
  headOcc.position.copy(pose.center).addScaledVector(pose.fwd,-pose.width*.43).add(delta);headOcc.quaternion.copy(pose.faceQ);headOcc.scale.set(pose.width*.48,pose.height*.60,pose.width*.58);
  glasses.updateMatrixWorld(true);
@@ -4299,7 +4317,7 @@ function stopAR(){
 }
 async function startAR(force=false){
  if(starting||mode!=='idle')return;
- if(/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(navigator.userAgent)&&!force){$('inapp').classList.add('on');return;}
+ if(IN_APP&&!force&&!await escapeWebview()){$('inapp').classList.add('on');return;}
  if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){errorUI(new Error('카메라는 HTTPS 주소에서 사용할 수 있습니다. GitHub Pages 주소로 열어주세요.'));return;}
  starting=true;const token=++session;$('tryon').disabled=$('preview').disabled=true;$('loading').classList.add('on');$('loadmsg').textContent='제품과 얼굴 인식을 준비하고 있습니다';
  try{
@@ -4334,7 +4352,7 @@ $('clearCal').onclick=()=>{faceWidthCal=null;calibration=null;scaleFilter.reset(
 $('part').onchange=updateMaterialControls;$('materialColor').oninput=()=>{if(mode!=='preview')return;const role=$('part').value,c=new THREE.Color($('materialColor').value);for(const m of materials)if(m.userData.role===role){if(role==='lens'){c.convertSRGBToLinear();m.userData.uniforms.uTransmission.value.set(c.r,c.g,c.b);}else m.color.copy(c).convertSRGBToLinear();}};
 $('roughness').oninput=()=>{$('roughnessOut').textContent=$('roughness').value;if(mode==='preview')for(const m of materials)if(m.userData.role===$('part').value)m.roughness=+$('roughness').value/100;};$('resetMaterial').onclick=resetMaterials;
 $('tryon').onclick=()=>{resetMaterials();startAR();};$('preview').onclick=startPreview;$('arback').onclick=()=>{stopAR();resetMaterials();show('product');};$('camerrclose').onclick=()=>{$('camerr').classList.remove('on');show('product');};
-$('inappclose').onclick=()=>{$('inapp').classList.remove('on');startAR(true);};$('copylink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copylink').textContent='복사됨';}catch(_){prompt('링크를 복사해 주세요',location.href);}};
+$('inappclose').onclick=()=>{$('inapp').classList.remove('on');startAR(true);};$('inappopen').onclick=()=>{escapeWebview().then(ok=>{if(!ok){$('inappmsg').textContent=IS_ANDROID?'오른쪽 위 메뉴(⋮)에서 "다른 브라우저로 열기"를 눌러주세요.':'오른쪽 아래 공유(⋯) 메뉴에서 "Safari로 열기"를 눌러주세요. 또는 링크를 복사해 Safari에 붙여넣어 주세요.';}});};$('copylink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copylink').textContent='복사됨';}catch(_){prompt('링크를 복사해 주세요',location.href);}};
 const cancel=document.createElement('button');cancel.className='btn ghost';cancel.textContent='취소';cancel.onclick=()=>{stopAR();show('product');};$('loading').append(cancel);
 $('shutter').onclick=async()=>{if(mode!=='ar'||!validFace)return;const meta={sku:CUR,name:P.name,number:Date.now()};$('shutter').disabled=true;try{const blob=await capture();photos.push({...meta,blob,url:URL.createObjectURL(blob)});if(photos.length>20){URL.revokeObjectURL(photos.shift().url);}selected=photos.length-1;updateGalleryCount();$('flash').style.opacity=1;setTimeout(()=>$('flash').style.opacity=0,90);}catch(e){errorUI(e);}finally{$('shutter').disabled=false;}};
 $('count').onclick=()=>{if(photos.length){stopAR();show('gallery');renderGallery();}};$('gback').onclick=()=>show('product');$('retake').onclick=()=>startAR(true);
