@@ -254,7 +254,7 @@
    145
   ],
   "img": "assets/SF1098SLBK-001-58/thumb.jpg",
-  "glb": "assets/SF1098SLBK-001-58/model.glb?v=266",
+  "glb": "assets/SF1098SLBK-001-58/model.glb?v=267",
   "fit": {
    "faceWidthMm": 153,
    "up": -15,
@@ -317,7 +317,8 @@
    "mallUrl": "https://lookoptical.kr/product/%EC%97%B0%EC%98%88%EC%9D%B8-%EC%B0%A9%EC%9A%A9-%ED%8E%98%EB%9D%BC%EA%B0%80%EB%AA%A8-%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4sf1098slbk-001-58/2632/category/50/display/1/",
    "productNo": 2632,
    "design": "SF-2830S_Detail.pdf",
-   "material": "ZYL"
+   "material": "ZYL",
+   "nosePad": "integrated acetate, 13.8mm (sheet)"
   },
   "similar": [
    "SF1096SLBK-001-58",
