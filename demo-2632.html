@@ -31,7 +31,7 @@ header .logo{font-weight:800;letter-spacing:.08em;font-size:15px}header .ic{disp
 </style>
 </head>
 <body>
-<div class="simbar">시뮬레이션 페이지 · 실제 상세페이지(lookoptical.kr/product/…/2632/)의 구성을 재현. TRY ON IT 버튼만 실제로 동작합니다.</div>
+<div class="simbar">시뮬레이션 페이지 · 실제 상세페이지(lookoptical.kr/product/…/2632/)의 구성을 재현. TRY ON IT·"AI로 가상착용해보기" 배지만 실제로 동작합니다.</div>
 <header><span>☰</span><span class="logo">LOOK OPTICAL</span><span class="ic"><span>⌕</span><span>⛉</span></span></header>
 
 <div class="slider">
@@ -62,6 +62,7 @@ header .logo{font-weight:800;letter-spacing:.08em;font-size:15px}header .ic{disp
 
 <div class="tabs"><span class="on">DETAIL</span><span>REVIEW</span><span>Q&amp;A</span><span>배송/교환</span></div>
 <section class="detail">
+  <img src="demo_img/SF1098S/front.jpg" alt="정면" style="width:100%;display:block;margin:0 0 4px;background:#f6f6f6">
   상품 상세 정보 영역(실제 페이지의 DETAIL 탭 재현 자리). 가로 총장 등 사이즈 정보가 이 영역 하단에 표시됩니다.
   <table><tr><td>모델명</td><td>SF1098SLBK 001 58</td></tr><tr><td>컬러</td><td>BLACK</td></tr><tr><td>렌즈</td><td>58mm</td></tr><tr><td>가로 총장</td><td>(상세 이미지 기재)</td></tr><tr><td>소재</td><td>아세테이트</td></tr></table>
 </section>
@@ -77,13 +78,54 @@ header .logo{font-weight:800;letter-spacing:.08em;font-size:15px}header .ic{disp
   var productNo  = '2632';                 // {$product_no}
   var prodName   = '[연예인 착용] 페라가모 선글라스(SF1098SLBK 001 58)';
   var price      = '575,000원';
+  // ===== "AI로 가상착용해보기" 원형 배지: ① 상단 메인 이미지 우측 하단 ② 상세 정면 이미지 바로 아래 =====
+  function arBadges(url){
+    if (document.getElementById('lkVtoCss')) return;
+    var st = document.createElement('style'); st.id = 'lkVtoCss';
+    st.textContent =
+      '.lk-vto{position:relative;display:flex;align-items:center;justify-content:center;width:88px;height:88px;border-radius:50%;text-decoration:none;'+
+      'background:radial-gradient(120% 120% at 30% 20%,#2b2b2b 0%,#0d0d0d 60%,#000 100%);color:#fff;'+
+      'box-shadow:0 8px 22px rgba(0,0,0,.28),inset 0 0 0 1.5px rgba(214,178,107,.95),inset 0 0 0 5px rgba(0,0,0,.55),inset 0 0 0 6px rgba(214,178,107,.35);'+
+      'font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;-webkit-tap-highlight-color:transparent;transition:transform .2s ease}'+
+      '.lk-vto:active{transform:scale(.94)}'+
+      '.lk-vto .lk-in{display:flex;flex-direction:column;align-items:center;line-height:1.12;text-align:center}'+
+      '.lk-vto svg{width:24px;height:12px;margin-bottom:3px}'+
+      '.lk-vto b{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:#d6b26b}'+
+      '.lk-vto span.t{font-size:12px;font-weight:700;letter-spacing:-.02em}'+
+      '.lk-vto:before{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgba(214,178,107,.55);animation:lkPulse 2.4s ease-out infinite}'+
+      '@keyframes lkPulse{0%{transform:scale(.92);opacity:.9}70%{transform:scale(1.18);opacity:0}100%{opacity:0}}'+
+      '@media (prefers-reduced-motion:reduce){.lk-vto:before{animation:none;opacity:.5}}'+
+      '.lk-vto-float{position:absolute;right:14px;bottom:30px;z-index:20}'+
+      '.lk-vto-block{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 0 26px}'+
+      '.lk-vto-block .lk-vto{width:100px;height:100px}.lk-vto-block .lk-vto svg{width:28px;height:14px}.lk-vto-block .lk-vto span.t{font-size:13.5px}.lk-vto-block .lk-vto b{font-size:11.5px}'+
+      '.lk-vto-cap{font-size:12px;color:#777;letter-spacing:-.01em}';
+    document.head.appendChild(st);
+    var icon = '<svg viewBox="0 0 48 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="13" r="8"/><circle cx="36" cy="13" r="8"/><path d="M20 12c2.5-2 5.5-2 8 0M4 11L1 6M44 11l3-5"/></svg>';
+    function badge(){ var a = document.createElement('a'); a.href = url; a.target = '_self'; a.className = 'lk-vto'; a.setAttribute('aria-label', 'AI로 가상착용해보기');
+      a.innerHTML = '<span class="lk-in">' + icon + '<b>AI로</b><span class="t">가상착용<br>해보기</span></span>'; return a; }
+    // ① 메인 이미지 영역(Cafe24 스킨 후보 → 시뮬 .slider)
+    var mainSel = ['.xans-product-image .keyImg', '.keyImg', '.xans-product-image .thumbnail', '.xans-product-image .prdImg', '.detailArea .imgArea', '.slider'];
+    var host = null; for (var i = 0; i < mainSel.length && !host; i++) host = document.querySelector(mainSel[i]);
+    if (host) { if (getComputedStyle(host).position === 'static') host.style.position = 'relative'; var f = badge(); f.classList.add('lk-vto-float'); host.appendChild(f); }
+    // ② 상세 정면 이미지 하단: 상세 본문 안 첫 상품 정면 이미지(파일명 Detail/front 우선, 없으면 첫 큰 이미지)
+    var detSel = ['#prdDetail', '.xans-product-detail .cont', '.prdDetail', 'section.detail'], det = null;
+    for (var j = 0; j < detSel.length && !det; j++) det = document.querySelector(detSel[j]);
+    if (det) {
+      var imgs = [].slice.call(det.querySelectorAll('img')), pick = null;
+      for (var k = 0; k < imgs.length && !pick; k++) { var s = imgs[k].getAttribute('ec-data-src') || imgs[k].getAttribute('src') || ''; if (/front|_Detail\/|SA_Detail|2_Detail/i.test(s)) pick = imgs[k]; }
+      if (!pick) pick = imgs[0] || null;
+      var blk = document.createElement('div'); blk.className = 'lk-vto-block'; blk.appendChild(badge());
+      var cap = document.createElement('div'); cap.className = 'lk-vto-cap'; cap.textContent = '카메라로 내 얼굴에 바로 써보세요'; blk.appendChild(cap);
+      if (pick) pick.insertAdjacentElement('afterend', blk); else det.insertBefore(blk, det.firstChild);
+    }
+  }
   function norm(s){ return (s||'').replace(/\{\$[^}]*\}/g,'').trim().replace(/\s+/g,'-').toUpperCase(); }
   var meta = function(p){ var m=document.querySelector('meta[property="'+p+'"]'); return m?m.getAttribute('content'):''; };
   var candidates = [norm(modelName), norm(customCode), norm(productNo), norm(meta('meta-product:productId'))].filter(Boolean);
   var img = document.querySelector('img[alt="TRY ON IT"]');
   var btn = img ? (img.closest('a') || img.parentElement) : document.getElementById('tryonBtn');
-  if (!btn || !candidates.length) return;
-  btn.style.visibility = 'hidden';
+  if (!candidates.length) return;
+  if (btn) btn.style.visibility = 'hidden';
   var ctrl = ('AbortController' in window) ? new AbortController() : null;
   if (ctrl) setTimeout(function(){ ctrl.abort(); }, 4000);
   fetch(AR_BASE + 'assets/catalog.json?_=' + Date.now(), {cache:'no-store', signal: ctrl && ctrl.signal})
@@ -91,15 +133,16 @@ header .logo{font-weight:800;letter-spacing:.08em;font-size:15px}header .ic{disp
     .then(function(cat){
       var key = null;
       for (var i=0;i<candidates.length;i++){ if (cat && cat[candidates[i]]) { key = candidates[i]; break; } }
-      if (!key) { btn.style.display = 'none'; return; }
+      if (!key) { if (btn) btn.style.display = 'none'; return; }
       var og = meta('og:image');
       var url = AR_BASE + '?sku=' + encodeURIComponent(key) + '&auto=1'
               + '&back=' + encodeURIComponent(location.href)
               + '&name=' + encodeURIComponent(prodName) + '&price=' + encodeURIComponent(price)
               + (og ? '&img=' + encodeURIComponent(og) : '');
-      btn.setAttribute('href', url); btn.setAttribute('target', '_self'); btn.style.display = ''; btn.style.visibility = '';
+      if (btn) { btn.setAttribute('href', url); btn.setAttribute('target', '_self'); btn.style.display = ''; btn.style.visibility = ''; }
+      arBadges(url);
     })
-    .catch(function(){ btn.style.display = 'none'; });
+    .catch(function(){ if (btn) btn.style.display = 'none'; });
 })();
 </script>
 </body>
