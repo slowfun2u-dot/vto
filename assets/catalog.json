@@ -257,7 +257,7 @@
    145
   ],
   "img": "assets/SF1098SLBK-001-58/thumb.jpg",
-  "glb": "assets/SF1098SLBK-001-58/model.glb?v=267c",
+  "glb": "assets/SF1098SLBK-001-58/model.glb?v=267d",
   "fit": {
    "faceWidthMm": 153,
    "up": -15,
@@ -330,7 +330,7 @@
    "productNo": 2632,
    "design": "SF-2830S_Detail.pdf",
    "material": "ZYL",
-   "nosePad": "clear grey; sheet section; JJ sketch blended side profile"
+   "nosePad": "clear grey; sheet section; JJ sketch profile; depth x0.6"
   },
   "similar": [
    "SF1096SLBK-001-58",
