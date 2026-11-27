@@ -336,5 +336,91 @@
    "SF1096SLBK-001-58",
    "SF2132SLBK"
   ]
+ },
+ "SD6083-1-001-52": {
+  "name": "[연예인 착용] 산드로 선글라스(SD6083-1 001 52)",
+  "price": "295,000원",
+  "size": [
+   52,
+   21,
+   145
+  ],
+  "img": "assets/SD6083-1-001-52/thumb.jpg",
+  "glb": "assets/SD6083-1-001-52/model.glb?v=11271647",
+  "fit": {
+   "faceWidthMm": 153,
+   "up": -15,
+   "fwd": 14,
+   "tiltDeg": 8.0,
+   "templeFadeStartMm": 107,
+   "templeFadeEndMm": 137,
+   "templeBendMm": 102.0,
+   "padAnchorsMm": [
+    [
+     -9,
+     -4,
+     -2
+    ],
+    [
+     9,
+     -4,
+     -2
+    ]
+   ]
+  },
+  "lens": {
+   "tint": [
+    0.449,
+    0.444,
+    0.441
+   ],
+   "reflect": 1.0
+  },
+  "materials": {
+   "lens": {
+    "gradient": 0.0,
+    "roughness": 0.04
+   },
+   "pad": {
+    "color": [
+     0.14,
+     0.14,
+     0.15
+    ],
+    "opacity": 0.55
+   }
+  },
+  "frame": {
+   "baseColor": [
+    0.018,
+    0.018,
+    0.018
+   ],
+   "gloss": 1.0,
+   "pattern": false
+  },
+  "ao": {
+   "Front": "assets/SD6083-1-001-52/ao_front.png",
+   "Temple_L": "assets/SD6083-1-001-52/ao_temple_l.png",
+   "Temple_R": "assets/SD6083-1-001-52/ao_temple_r.png"
+  },
+  "decals": [],
+  "meta": {
+   "totalWidthMm": 143.5,
+   "lensMm": 52,
+   "registered": "2026-11-27",
+   "source": "design",
+   "design": "sd3707s52_detail.pdf",
+   "material": "ZYL",
+   "T": 5.0,
+   "tiltDeg": 8.0,
+   "headCurveDeg": 5.0,
+   "base": 4.0,
+   "wrapR": 823.0,
+   "rimColorSpread": 0.51,
+   "patternDetected": false,
+   "mallUrl": "https://lookoptical.kr/product/%EC%97%B0%EC%98%88%EC%9D%B8-%EC%B0%A9%EC%9A%A9-%EC%82%B0%EB%93%9C%EB%A1%9C-%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4sd6083-1-001-52/3850/category/26/display/1/",
+   "productNo": 3850
+  }
  }
 }
