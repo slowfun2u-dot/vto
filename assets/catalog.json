@@ -346,7 +346,7 @@
    145
   ],
   "img": "assets/SD6083-1-001-52/thumb.jpg",
-  "glb": "assets/SD6083-1-001-52/model.glb?v=11271647",
+  "glb": "assets/SD6083-1-001-52/model.glb?v=11271653",
   "fit": {
    "faceWidthMm": 153,
    "up": -15,
@@ -404,7 +404,42 @@
    "Temple_L": "assets/SD6083-1-001-52/ao_temple_l.png",
    "Temple_R": "assets/SD6083-1-001-52/ao_temple_r.png"
   },
-  "decals": [],
+  "decals": [
+   {
+    "name": "Logo_0_L",
+    "w": 15.768460422092012,
+    "h": 2.4885001288519963,
+    "x": -74.916,
+    "y": -2.928,
+    "z": -26.85,
+    "rot": [
+     0.0,
+     -80.0,
+     8.0
+    ],
+    "parent": "Temple_L",
+    "depth": 20.2,
+    "visible": true,
+    "img": "assets/SD6083-1-001-52/logo_side_0.png"
+   },
+   {
+    "name": "Logo_0_R",
+    "w": 15.768460422092012,
+    "h": 2.4885001288519963,
+    "x": 74.913,
+    "y": -2.928,
+    "z": -26.848,
+    "rot": [
+     0.0,
+     80.0,
+     -8.0
+    ],
+    "parent": "Temple_R",
+    "depth": 20.2,
+    "visible": true,
+    "img": "assets/SD6083-1-001-52/logo_side_0.png"
+   }
+  ],
   "meta": {
    "totalWidthMm": 143.5,
    "lensMm": 52,
