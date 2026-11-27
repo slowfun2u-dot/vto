@@ -81,6 +81,8 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 .toast.on{opacity:1}
 
 /* overlays */
+.fsrow{display:flex;gap:10px;margin-top:6px}.fsbtn{width:96px;height:78px;border-radius:16px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:15px}.fsbtn small{font-size:11px;color:var(--ink2)}.fsbtn.sel{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
+.fspill{pointer-events:auto;position:absolute;top:46px;left:50%;transform:translateX(-50%);height:28px;padding:0 12px;border-radius:14px;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:12px}
 .overlay{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;gap:14px;z-index:50}
 .overlay.on{display:flex}
 .overlay p{color:var(--ink2);font-size:15px;line-height:1.6;max-width:320px}
@@ -134,7 +136,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
     <canvas id="gl"></canvas>
     <div id="flash"></div><div id="qualityBadge">스타일 체험 · 크기 추정</div>
     <div id="msg"><span>밝은 곳에서 정면을 봐주세요</span></div>
-    <div class="topbar"><button id="arback" aria-label="닫기">×</button><a id="arhome" class="homepill" href="#">홈페이지로 돌아가기</a><button id="tune" aria-label="화면 설정">☷</button></div>
+    <div class="topbar"><button id="arback" aria-label="닫기">×</button><a id="arhome" class="homepill" href="#">홈페이지로 돌아가기</a><button id="fspill" class="fspill" aria-label="얼굴 크기 변경">얼굴 크기</button><button id="tune" aria-label="화면 설정">☷</button></div>
     <div id="simsheet" aria-label="비슷한 상품"><h3><span>비슷한 상품 · 바로 착용해보기</span><button id="simclose" aria-label="닫기">×</button></h3><div id="simlist"></div><div id="simnote">마음에 들면 상단 "이 상품 페이지로 돌아가기"로 해당 상품 페이지가 열립니다</div></div>
   </div>
   <div class="arbar">
@@ -159,6 +161,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 <div id="dbg" style="position:fixed;left:0;right:0;bottom:0;z-index:999;background:rgba(160,0,0,.92);color:#fff;font:12px/1.4 monospace;padding:8px 10px;display:none;max-height:40vh;overflow:auto;white-space:pre-wrap"></div>
 <div class="overlay" id="loading"><div class="spinner"></div><h3>준비 중</h3><p id="loadmsg">얼굴 인식 모델을 불러오는 중입니다</p></div>
 <div class="overlay" id="inapp"><h3>브라우저에서 열어주세요</h3><p id="inappmsg">앱 안의 브라우저에서는 카메라를 쓸 수 없습니다. 아래 버튼으로 기본 브라우저에서 열어주세요.</p><button class="btn" id="inappopen">브라우저로 열기</button><button class="btn ghost" id="copylink">링크 복사</button><button class="btn ghost" id="inappclose">그래도 계속</button></div>
+<div class="overlay" id="facesize"><h3>얼굴 크기를 골라주세요</h3><p>안경을 실제 크기로 맞추는 기준이에요. 언제든 바꿀 수 있어요.</p><div class="fsrow"><button class="fsbtn" data-fs="s"><b>작은편</b><small>140mm</small></button><button class="fsbtn" data-fs="m"><b>보통</b><small>145mm</small></button><button class="fsbtn" data-fs="l"><b>큰편</b><small>148mm</small></button></div></div>
 <div class="overlay" id="camerr"><h3>카메라를 열 수 없습니다</h3><p id="camerrmsg"></p><button class="btn ghost" id="camerrclose">돌아가기</button></div>
 
 <div id="settings" class="settings" aria-label="화면과 착용 설정">
@@ -3836,7 +3839,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.6.8";
+const APP_VERSION="v2.7.0";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3886,7 +3889,12 @@ const BACK=backURL(),MALL_NAME=query.get('name')||'',MALL_PRICE=query.get('price
 let skuMissing=false;
 // 초기 착용 크기 보정: 얼굴 폭 추정이 작게 잡혀 안경이 10~15% 크게 보이는 문제 → 전역 0.88. ?size=0.85 로 덮어쓰기, 상품별 fit.sizeAdj 곱
 const SIZE_TRIM=(()=>{const v=parseFloat(query.get('size'));return Number.isFinite(v)&&v>0.6&&v<1.4?v:0.85;})();
-function sizeTrim(){return SIZE_TRIM*((P&&P.fit&&Number.isFinite(P.fit.sizeAdj))?P.fit.sizeAdj:1);}
+function sizeTrim(){return SIZE_TRIM*((P&&P.fit&&Number.isFinite(P.fit.sizeAdj))?P.fit.sizeAdj:1)*((glasses&&glasses.userData.widthFix)||1);}
+// 얼굴 크기(고정): 작은편 140 / 보통 145 / 큰편 148mm. 착용 중 자동 보정 없음. 보통=기존 체감 기준(얼굴폭 153 가정 × 크기 0.85)
+const FACE_SIZES={s:{mm:140,label:'작은편'},m:{mm:145,label:'보통'},l:{mm:148,label:'큰편'}};
+let faceSize=(()=>{try{const v=localStorage.getItem('vto_face');return FACE_SIZES[v]?v:null;}catch(_){return null;}})();
+function faceWidthForPnP(){return faceSize?153*FACE_SIZES[faceSize].mm/145:null;}
+function chooseFaceSize(){return new Promise(res=>{const o=$('facesize');o.classList.add('on');o.querySelectorAll('[data-fs]').forEach(b=>{b.classList.toggle('sel',b.dataset.fs===faceSize);b.onclick=()=>{faceSize=b.dataset.fs;try{localStorage.setItem('vto_face',faceSize);}catch(_){}o.classList.remove('on');$('fspill').textContent='얼굴 크기: '+FACE_SIZES[faceSize].label;if(typeof scaleFilter!=='undefined'&&scaleFilter.reset)scaleFilter.reset();res(faceSize);};});});}
 const MALL_MODE=!!query.get('sku');
 if(IN_APP&&query.get('auto')==='1'&&!sessionStorage.getItem('vto_esc')){try{sessionStorage.setItem('vto_esc','1');}catch(_){}escapeWebview();}
 const ENTRY_SKU=query.get('sku');
@@ -4149,7 +4157,10 @@ function updatePartVisibility(){
 }
 function disposeModel(){if(!glasses)return;scene.remove(glasses);const gs=new Set();glasses.traverse(o=>{if(o.geometry)gs.add(o.geometry);});gs.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());authoredMaterials.forEach(m=>m.dispose());maps.forEach(t=>t.dispose());materials=[];maps=[];authoredMaterials=[];lensMaterials=[];glasses=null;modelSku=null;}
 async function loadModel(){if(glasses&&modelSku===CUR)return;if(modelPromise)return modelPromise;
- modelPromise=(async()=>{disposeModel();const g=await new THREE.GLTFLoader().loadAsync(A(P.glb));glasses=g.scene;await prepareMaterials(glasses);glasses.visible=false;scene.add(glasses);modelSku=CUR;})();
+ modelPromise=(async()=>{disposeModel();const g=await new THREE.GLTFLoader().loadAsync(A(P.glb));glasses=g.scene;await prepareMaterials(glasses);glasses.visible=false;scene.add(glasses);modelSku=CUR;
+  // 전면 총장 일관화: 3D 프론트 폭을 상품 총장(meta.totalWidthMm: 시트·상세 하단 기준)에 정확히 맞춤
+  {let fw=0;glasses.updateMatrixWorld(true);glasses.traverse(o=>{if(o.isMesh&&o.name==='Front'){const b=new THREE.Box3().setFromObject(o);fw=(b.max.x-b.min.x)*1000/(glasses.scale.x||1);}});const tw=P.meta&&P.meta.totalWidthMm;glasses.userData.widthFix=(fw>60&&tw)?Math.min(1.1,Math.max(.9,tw/fw)):1;}
+ })();
  try{await modelPromise;}catch(e){disposeModel();throw new Error('제품 3D 모델을 준비하지 못했습니다. '+e.message);}finally{modelPromise=null;}
 }
 function updateMaterialLighting(){if(!renderer)return;for(const m of materials){if(m.userData.role==='decal')continue;m.envMapIntensity=m.userData.role==='lens'?.30+settings.studio*.45:.35+settings.studio*.60;if(m.userData.role==='lens')m.userData.uniforms.uLensReflect.value=.16+settings.studio*.52;}keyL.intensity=.75+settings.studio*.6;fillL.intensity=.24+settings.studio*.18;rimL.intensity=settings.studio*.5;}
@@ -4215,7 +4226,7 @@ function onFace(r){
  if(!lm||lm.length<468){validFace=false;faceLm=null;if(calibration)calibration.samples=[];return;}
  const width=V(lm[234]).distanceTo(V(lm[454])),height=V(lm[10]).distanceTo(V(lm[152]));
  if(!Number.isFinite(width)||width<vw*.10||width>vw*.9||height<vh*.13){validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
- const scaleM=(faceWidthCal||P.fit.faceWidthMm||CANON_W)/CANON_W;settings._scaleM=scaleM;
+ const scaleM=(faceWidthForPnP()||faceWidthCal||P.fit.faceWidthMm||CANON_W)/CANON_W;settings._scaleM=scaleM;
  const sol=solvePnP(lm,focalPx,scaleM,pnp&&t-lastSeen<600?pnp:null);
  if(!sol.R.every(Number.isFinite)||!sol.T.every(Number.isFinite)||sol.rms>width*.08){pnp=null;validFace=false;message('얼굴을 화면 중앙에 두고 정면에 가깝게 봐주세요');return;}
  pnp=sol;const R=sol.R,T=sol.T;
@@ -4237,6 +4248,7 @@ function onFace(r){
   }else{calibration.samples=[];$('calStatus').textContent='정면에서 눈을 뜨고 카메라를 바라봐 주세요.';}
  }
  // 홍채 지름(≈11.7mm) 기반 자동 크기 보정: PnP 거리 기준으로 환산한 홍채 mm와 비교
+ if(faceSize)autoCal.done=true;   // 얼굴 크기 고정 시 홍채 자동 보정 끔(착용 중 크기 변동 방지)
  if(!autoCal.done&&!faceWidthCal&&!calibration&&lm.length>=478&&Math.abs(yaw)<12&&Math.abs(pitch)<12){
   if(!autoCal.start)autoCal.start=t;
   const irisL=V(lm[469]).distanceTo(V(lm[471])),irisR=V(lm[474]).distanceTo(V(lm[476]));const irisD=(irisL+irisR)/2;
@@ -4347,6 +4359,7 @@ async function startAR(force=false){
  if(starting||mode!=='idle')return;
  if(IN_APP&&!force&&!await escapeWebview()){$('inapp').classList.add('on');return;}
  if(!window.isSecureContext||!navigator.mediaDevices?.getUserMedia){errorUI(new Error('카메라는 HTTPS 주소에서 사용할 수 있습니다. GitHub Pages 주소로 열어주세요.'));return;}
+ if(!faceSize)await chooseFaceSize();
  starting=true;const token=++session;$('tryon').disabled=$('preview').disabled=true;$('loading').classList.add('on');$('loadmsg').textContent='제품과 얼굴 인식을 준비하고 있습니다';
  try{
   if(contextLost)throw new Error('페이지를 새로고침해 주세요.');if(!renderer)ensureRenderer();await loadModel();await setupFace();if(token!==session)return;
@@ -4380,6 +4393,7 @@ $('clearCal').onclick=()=>{faceWidthCal=null;calibration=null;scaleFilter.reset(
 $('part').onchange=updateMaterialControls;$('materialColor').oninput=()=>{if(mode!=='preview')return;const role=$('part').value,c=new THREE.Color($('materialColor').value);for(const m of materials)if(m.userData.role===role){if(role==='lens'){c.convertSRGBToLinear();m.userData.uniforms.uTransmission.value.set(c.r,c.g,c.b);}else m.color.copy(c).convertSRGBToLinear();}};
 $('roughness').oninput=()=>{$('roughnessOut').textContent=$('roughness').value;if(mode==='preview')for(const m of materials)if(m.userData.role===$('part').value)m.roughness=+$('roughness').value/100;};$('resetMaterial').onclick=resetMaterials;
 $('tryon').onclick=()=>{resetMaterials();startAR();};$('preview').onclick=startPreview;$('arback').onclick=()=>{stopAR();resetMaterials();show('product');};$('camerrclose').onclick=()=>{$('camerr').classList.remove('on');show('product');};
+$('fspill').onclick=()=>chooseFaceSize();if(faceSize)$('fspill').textContent='얼굴 크기: '+FACE_SIZES[faceSize].label;
 $('inappclose').onclick=()=>{$('inapp').classList.remove('on');startAR(true);};$('inappopen').onclick=()=>{escapeWebview().then(ok=>{if(!ok){$('inappmsg').textContent=IS_ANDROID?'오른쪽 위 메뉴(⋮)에서 "다른 브라우저로 열기"를 눌러주세요.':'오른쪽 아래 공유(⋯) 메뉴에서 "Safari로 열기"를 눌러주세요. 또는 링크를 복사해 Safari에 붙여넣어 주세요.';}});};$('copylink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copylink').textContent='복사됨';}catch(_){prompt('링크를 복사해 주세요',location.href);}};
 const cancel=document.createElement('button');cancel.className='btn ghost';cancel.textContent='취소';cancel.onclick=()=>{stopAR();show('product');};$('loading').append(cancel);
 $('shutter').onclick=async()=>{if(mode!=='ar'||!validFace)return;const meta={sku:CUR,name:P.name,number:Date.now()};$('shutter').disabled=true;try{const blob=await capture();photos.push({...meta,blob,url:URL.createObjectURL(blob)});if(photos.length>20){URL.revokeObjectURL(photos.shift().url);}selected=photos.length-1;updateGalleryCount();$('flash').style.opacity=1;setTimeout(()=>$('flash').style.opacity=0,90);}catch(e){errorUI(e);}finally{$('shutter').disabled=false;}};
