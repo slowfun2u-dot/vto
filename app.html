@@ -82,7 +82,6 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 /* overlays */
 .fsrow{display:flex;gap:10px;margin-top:6px}.fsbtn{width:96px;height:78px;border-radius:16px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:15px}.fsbtn small{font-size:11px;color:var(--ink2)}.fsbtn.sel{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink) inset}
-.fspill{pointer-events:auto;position:absolute;top:46px;left:50%;transform:translateX(-50%);height:28px;padding:0 12px;border-radius:14px;border:0;background:rgba(0,0,0,.45);color:#fff;font-size:12px}
 .overlay{position:absolute;inset:0;background:var(--bg);display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px;gap:14px;z-index:50}
 .overlay.on{display:flex}
 .overlay p{color:var(--ink2);font-size:15px;line-height:1.6;max-width:320px}
@@ -90,7 +89,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 .spinner{width:36px;height:36px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--ink);animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.spinner{animation-duration:2s}}
-#qualityBadge{position:absolute;left:14px;bottom:14px;color:#fff;background:#171717b8;border:1px solid #ffffff26;border-radius:20px;padding:7px 12px;font-size:11px;pointer-events:none}
+#qualityBadge{position:absolute;left:14px;bottom:14px;color:#fff;background:#171717b8;border:1px solid #ffffff26;border-radius:20px;padding:7px 12px;font-size:11px;font-family:inherit;cursor:pointer;pointer-events:auto}#ar.preview #qualityBadge{pointer-events:none}
 #msg{top:65px;pointer-events:none}#ar.preview #gl{transform:none}#ar.preview #shutter,#ar.preview #count{visibility:hidden}#gl{touch-action:none}
 .settings{position:absolute;right:12px;top:64px;width:min(340px,calc(100vw - 24px));max-height:calc(100% - 210px);overflow-y:auto;background:#17191eed;color:#eee;border:1px solid #ffffff25;border-radius:16px;padding:18px;z-index:20;backdrop-filter:blur(18px);display:none}.settings.open{display:block}.settings h3{font-size:15px;margin-bottom:14px}.settings .row{display:flex;gap:10px;align-items:center;margin:13px 0}.settings .row label{font-size:12px;width:85px;flex:none}.settings input[type=range]{min-width:0;flex:1;accent-color:#d7c19d}.settings output{font-size:11px;width:35px;text-align:right;color:#d7c19d}.settings p{font-size:11px;color:#b6bac3;line-height:1.7;margin:10px 0}.settings select,.settings input[type=number]{background:#292c33;color:white;border:1px solid #50545d;border-radius:7px;padding:8px;width:100%}.settings button{background:#393f49;color:#fff;border-radius:8px;padding:9px 10px;font-size:12px}.settings .wide{width:100%;background:#d8c5a8;color:#24211b}.settings hr{border:0;border-top:1px solid #ffffff20;margin:18px 0}.settings .smallbtns{display:flex;gap:8px}.settings .smallbtns button{flex:1}.settings summary{font-size:12px;cursor:pointer}.settings [hidden]{display:none!important}#calStatus{min-height:19px}#shutter:disabled{opacity:.35;cursor:wait}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #b89c72;outline-offset:3px}.hero img{max-height:260px;object-fit:contain}#loading button{min-width:100px}
 
@@ -134,9 +133,9 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
   <div id="stage">
     <video id="video" playsinline muted autoplay></video>
     <canvas id="gl"></canvas>
-    <div id="flash"></div><div id="qualityBadge">스타일 체험 · 크기 추정</div>
+    <div id="flash"></div><button id="qualityBadge" type="button" aria-label="얼굴크기 다시선택">얼굴크기 다시선택</button>
     <div id="msg"><span>밝은 곳에서 정면을 봐주세요</span></div>
-    <div class="topbar"><button id="arback" aria-label="닫기">×</button><a id="arhome" class="homepill" href="#">홈페이지로 돌아가기</a><button id="fspill" class="fspill" aria-label="얼굴 크기 변경">얼굴 크기</button><button id="tune" aria-label="화면 설정">☷</button></div>
+    <div class="topbar"><button id="arback" aria-label="닫기">×</button><a id="arhome" class="homepill" href="#">홈페이지로 돌아가기</a><button id="tune" aria-label="화면 설정">☷</button></div>
     <div id="simsheet" aria-label="비슷한 상품"><h3><span>비슷한 상품 · 바로 착용해보기</span><button id="simclose" aria-label="닫기">×</button></h3><div id="simlist"></div><div id="simnote">마음에 들면 상단 "이 상품 페이지로 돌아가기"로 해당 상품 페이지가 열립니다</div></div>
   </div>
   <div class="arbar">
@@ -3839,7 +3838,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.7.0";
+const APP_VERSION="v2.7.1";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3894,7 +3893,7 @@ function sizeTrim(){return SIZE_TRIM*((P&&P.fit&&Number.isFinite(P.fit.sizeAdj))
 const FACE_SIZES={s:{mm:140,label:'작은편'},m:{mm:145,label:'보통'},l:{mm:148,label:'큰편'}};
 let faceSize=(()=>{try{const v=localStorage.getItem('vto_face');return FACE_SIZES[v]?v:null;}catch(_){return null;}})();
 function faceWidthForPnP(){return faceSize?153*FACE_SIZES[faceSize].mm/145:null;}
-function chooseFaceSize(){return new Promise(res=>{const o=$('facesize');o.classList.add('on');o.querySelectorAll('[data-fs]').forEach(b=>{b.classList.toggle('sel',b.dataset.fs===faceSize);b.onclick=()=>{faceSize=b.dataset.fs;try{localStorage.setItem('vto_face',faceSize);}catch(_){}o.classList.remove('on');$('fspill').textContent='얼굴 크기: '+FACE_SIZES[faceSize].label;if(typeof scaleFilter!=='undefined'&&scaleFilter.reset)scaleFilter.reset();res(faceSize);};});});}
+function chooseFaceSize(){return new Promise(res=>{const o=$('facesize');o.classList.add('on');o.querySelectorAll('[data-fs]').forEach(b=>{b.classList.toggle('sel',b.dataset.fs===faceSize);b.onclick=()=>{faceSize=b.dataset.fs;try{localStorage.setItem('vto_face',faceSize);}catch(_){}o.classList.remove('on');if(typeof scaleFilter!=='undefined'&&scaleFilter.reset)scaleFilter.reset();res(faceSize);};});});}
 const MALL_MODE=!!query.get('sku');
 if(IN_APP&&query.get('auto')==='1'&&!sessionStorage.getItem('vto_esc')){try{sessionStorage.setItem('vto_esc','1');}catch(_){}escapeWebview();}
 const ENTRY_SKU=query.get('sku');
@@ -4323,7 +4322,7 @@ function loop(t=performance.now(),token=session){
   else{glasses.visible=true;for(const m of materials)if(m.userData.trackUniforms)m.userData.trackUniforms.trackOpacity.value=1;if(!dragging&&t-(loop.lastDrag||0)>2500)previewYaw+=dt*.00007;glasses.quaternion.setFromEuler(new THREE.Euler(previewPitch,previewYaw,0,'YXZ'));glasses.position.set(0,0,30);glasses.scale.setScalar(1000);faceOcc.visible=headOcc.visible=false;}
   renderFrame();
   if(t-lastQuality>2500&&mode==='ar'){lastQuality=t;let next=renderRatio;if(frameDt>42)next=Math.max(.65,renderRatio-.15);else if(frameDt<24)next=Math.min(1.25,renderRatio+.1);if(Math.abs(next-renderRatio)>.01){renderRatio=next;resizeRender();}}
-  if(t-lastUI>500){lastUI=t;$('qualityBadge').textContent=mode==='preview'?'3D 제품 보기 · 드래그해서 회전':faceWidthCal?'크기 보정 적용':'스타일 체험 · 크기 추정';$('perfStatus').textContent=DEBUG?Math.round(1000/frameDt)+' fps · '+glc.width+'×'+glc.height+(pose?' · z '+Math.round(-pnp.T[2])+'mm · rms '+pose.rms.toFixed(1)+' · W '+Math.round(settings._scaleM*CANON_W)+(faceWidthCal?'cal':'def'):''):'';}
+  if(t-lastUI>500){lastUI=t;$('qualityBadge').textContent=mode==='preview'?'3D 제품 보기 · 드래그해서 회전':'얼굴크기 다시선택';$('perfStatus').textContent=DEBUG?Math.round(1000/frameDt)+' fps · '+glc.width+'×'+glc.height+(pose?' · z '+Math.round(-pnp.T[2])+'mm · rms '+pose.rms.toFixed(1)+' · W '+Math.round(settings._scaleM*CANON_W)+(faceWidthCal?'cal':'def'):''):'';}
  }catch(e){stopAR();errorUI(new Error('화면 처리 중 오류가 발생했습니다. 다시 열어주세요. '+e.message));return;}
  raf=requestAnimationFrame(t=>loop(t,token));
 }
@@ -4393,7 +4392,7 @@ $('clearCal').onclick=()=>{faceWidthCal=null;calibration=null;scaleFilter.reset(
 $('part').onchange=updateMaterialControls;$('materialColor').oninput=()=>{if(mode!=='preview')return;const role=$('part').value,c=new THREE.Color($('materialColor').value);for(const m of materials)if(m.userData.role===role){if(role==='lens'){c.convertSRGBToLinear();m.userData.uniforms.uTransmission.value.set(c.r,c.g,c.b);}else m.color.copy(c).convertSRGBToLinear();}};
 $('roughness').oninput=()=>{$('roughnessOut').textContent=$('roughness').value;if(mode==='preview')for(const m of materials)if(m.userData.role===$('part').value)m.roughness=+$('roughness').value/100;};$('resetMaterial').onclick=resetMaterials;
 $('tryon').onclick=()=>{resetMaterials();startAR();};$('preview').onclick=startPreview;$('arback').onclick=()=>{stopAR();resetMaterials();show('product');};$('camerrclose').onclick=()=>{$('camerr').classList.remove('on');show('product');};
-$('fspill').onclick=()=>chooseFaceSize();if(faceSize)$('fspill').textContent='얼굴 크기: '+FACE_SIZES[faceSize].label;
+$('qualityBadge').onclick=()=>{if(mode==='ar')chooseFaceSize();};
 $('inappclose').onclick=()=>{$('inapp').classList.remove('on');startAR(true);};$('inappopen').onclick=()=>{escapeWebview().then(ok=>{if(!ok){$('inappmsg').textContent=IS_ANDROID?'오른쪽 위 메뉴(⋮)에서 "다른 브라우저로 열기"를 눌러주세요.':'오른쪽 아래 공유(⋯) 메뉴에서 "Safari로 열기"를 눌러주세요. 또는 링크를 복사해 Safari에 붙여넣어 주세요.';}});};$('copylink').onclick=async()=>{try{await navigator.clipboard.writeText(location.href);$('copylink').textContent='복사됨';}catch(_){prompt('링크를 복사해 주세요',location.href);}};
 const cancel=document.createElement('button');cancel.className='btn ghost';cancel.textContent='취소';cancel.onclick=()=>{stopAR();show('product');};$('loading').append(cancel);
 $('shutter').onclick=async()=>{if(mode!=='ar'||!validFace)return;const meta={sku:CUR,name:P.name,number:Date.now()};$('shutter').disabled=true;try{const blob=await capture();photos.push({...meta,blob,url:URL.createObjectURL(blob)});if(photos.length>20){URL.revokeObjectURL(photos.shift().url);}selected=photos.length-1;updateGalleryCount();$('flash').style.opacity=1;setTimeout(()=>$('flash').style.opacity=0,90);}catch(e){errorUI(e);}finally{$('shutter').disabled=false;}};
