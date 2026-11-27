@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.6.0";
+const APP_VERSION="v2.6.1";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3987,14 +3987,16 @@ function makeEnvironment(){
   const ambient=.025+.045*v+.02*(1-sm(.0,.35,v));                                  // 위로 갈수록 밝은 스튜디오 공간 + 바닥 반사 약간
   const sbox=(cu,cv,rx,ry,n,f)=>{const r=Math.pow(Math.pow(du(u,cu)/rx,n)+Math.pow(Math.abs(v-cv)/ry,n),1/n);return 1-sm(1-f,1+f,r);};
   // ① 키 소프트박스: 카메라 바로 위, 둥근 모서리 창 — 볼록 렌즈 상단에 휘어진 창 반사(제품컷의 핵심). 박스 상부가 더 밝음
-  const win=sbox(CU,.50,.042,.055,2.4,.18)*(3.0+2.6*sm(.46,.58,v));
+  const win=0;   // 정면 라이트 없음(JJ 요청)
   // ② 하단 반사판: 렌즈 하단을 은은하게 받쳐줌
-  const card=sbox(CU,.39,.12,.03,3,.5)*.35;
+  const card=0;
+  // 상부 확산광: 고개를 들면(렌즈 법선이 위로) 렌즈 위쪽에 넓고 부드럽게 번지는 빛. 경계가 보이지 않도록 큰 페더
+  const dome=ellipse(u,v,CU,.70,.22,.10,.85)*1.6;
   // ③ 오버헤드 대형 소프트박스: 프레임 상단 모서리에 길고 부드러운 하이라이트
-  const top=ellipse(u,v,CU,.86,.20,.08,.45)*2.4;
+  const top=ellipse(u,v,CU,.86,.22,.09,.85)*2.0;
   // ④ 좌측 스트립(곡선): 측면 각도에서 프레임·렌즈 측면에 휘어진 하이라이트
   const keyL=arcF(u,v,.95,.55,.16,.02,Math.PI*.62,Math.PI*1.38)*2.2+arcF(u,v,.95,.55,.16,.02,-Math.PI*1.38,-Math.PI*.62)*2.2;
-  const L=ambient+win+card+top+keyL;const rgb=[L*.99,L,L*1.02];
+  const L=ambient+win+card+dome+top+keyL;const rgb=[L*.99,L,L*1.02];
   const e=Math.ceil(Math.log2(Math.max(...rgb))),scale=256/Math.pow(2,e);for(let c=0;c<3;c++)a[i+c]=Math.min(255,Math.round(rgb[c]*scale));a[i+3]=e+128;}
  // RGBE8 has no float upload/filter extension dependency. r128 PMREM preserves RGBE encoding.
  const tex=new THREE.DataTexture(a,W,H,THREE.RGBAFormat,THREE.UnsignedByteType);tex.encoding=THREE.RGBEEncoding;tex.minFilter=tex.magFilter=THREE.NearestFilter;tex.mapping=THREE.EquirectangularReflectionMapping;tex.needsUpdate=true;
@@ -4119,7 +4121,7 @@ function installTrackingFade(){
  sh.vertexShader=(m.userData.temple?'attribute float arDepth;\n':'')+'varying float vTempleDepth;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvTempleDepth='+(m.userData.temple?'arDepth':'0.')+';');
  sh.fragmentShader='uniform sampler2D trackBg;uniform vec2 trackRes;uniform float trackOpacity,templeFade,templeStart,templeEnd,partOpacity,cameraMatch,cameraNoise,noiseTime;varying float vTempleDepth;\n'+sh.fragmentShader;
  sh.fragmentShader=sh.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
- float coverage=partOpacity*(1.-templeFade*smoothstep(templeStart,templeEnd,vTempleDepth));
+ float coverage=partOpacity*(1.-templeFade*smoothstep(templeStart,templeStart+1.2,vTempleDepth));   // 귀 쪽 팁: 반투명 페이드 대신 시작 지점에서 깔끔히 잘라냄(1.2mm 안티앨리어싱)
  if(coverage<.004)discard;`);
  sh.fragmentShader=sh.fragmentShader.replace('#include <encodings_fragment>',`vec3 bg=sRGBToLinear(texture2D(trackBg,gl_FragCoord.xy/trackRes)).rgb;
  ${m.userData.role==='lens'?'':'gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*.97+vec3(.0015),cameraMatch);'}
