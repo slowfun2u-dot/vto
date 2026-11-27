@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.6.3";
+const APP_VERSION="v2.6.4";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3885,7 +3885,7 @@ function backURL(){const b=query.get('back');if(b){try{const u=new URL(b,locatio
 const BACK=backURL(),MALL_NAME=query.get('name')||'',MALL_PRICE=query.get('price')||'',MALL_IMG=(()=>{const v=query.get('img');try{const u=new URL(v||'',location.href);return MALL_HOSTS.includes(u.hostname)?u.href:'';}catch(_){return '';}})();
 let skuMissing=false;
 // 초기 착용 크기 보정: 얼굴 폭 추정이 작게 잡혀 안경이 10~15% 크게 보이는 문제 → 전역 0.88. ?size=0.85 로 덮어쓰기, 상품별 fit.sizeAdj 곱
-const SIZE_TRIM=(()=>{const v=parseFloat(query.get('size'));return Number.isFinite(v)&&v>0.6&&v<1.4?v:0.835;})();
+const SIZE_TRIM=(()=>{const v=parseFloat(query.get('size'));return Number.isFinite(v)&&v>0.6&&v<1.4?v:0.85;})();
 function sizeTrim(){return SIZE_TRIM*((P&&P.fit&&Number.isFinite(P.fit.sizeAdj))?P.fit.sizeAdj:1);}
 const MALL_MODE=!!query.get('sku');
 if(IN_APP&&query.get('auto')==='1'&&!sessionStorage.getItem('vto_esc')){try{sessionStorage.setItem('vto_esc','1');}catch(_){}escapeWebview();}
