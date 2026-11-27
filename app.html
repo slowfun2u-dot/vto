@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.5.3";
+const APP_VERSION="v2.5.4";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3983,10 +3983,14 @@ function makeEnvironment(){
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const u=x/W,v=y/H,i=(y*W+x)*4;
   const ambient=.028+.05*(1-v)+.035*sm(.62,.95,v);                                   // 위는 살짝 밝게, 바닥 반사 그라데이션
   const topBox=ellipse(u,v,.50,.19,.20,.075,.40)*(3.4+2.6*Math.exp(-(Math.pow(du(u,.5)/.07,2)+Math.pow((v-.19)/.03,2))));  // 타원 소프트박스 + 중앙 핫스팟
-  const keyL=strip(u,v,.235,.45,.011,.20,.45)*3.2, rimR=strip(u,v,.775,.43,.008,.17,.5)*2.6;  // 좌 키 스트립, 우 림 스트립
+  // 좌 키 / 우 림: 직선 스트립 대신 호(arc) 라이트 — 구면 렌즈에 휘어진 하이라이트가 맺혀 곡률이 읽힌다
+  const arc=(cu,cv,R0,w,a0,a1)=>{const dx=(u-cu+(u-cu>.5?-1:u-cu<-.5?1:0))*2,dy=v-cv,r=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);let k=0;if(ang>=a0&&ang<=a1){const m=(ang-a0)/(a1-a0);k=Math.sin(m*Math.PI);}return Math.exp(-Math.pow((r-R0)/w,2))*k;};
+  const keyL=arc(.33,.44,.19,.02,Math.PI*.62,Math.PI*1.38)*2.6+arc(.33,.44,.19,.02,-Math.PI*1.38,-Math.PI*.62)*2.6;
+  const rimR=arc(.68,.43,.16,.009,-Math.PI*.36,Math.PI*.36)*2.6;
+  const octa=ellipse(u,v,.40,.30,.028,.05,.5)*5.0;   // 원형 옥타박스 — 렌즈 좌상단에 둥근 하이라이트(볼록감)
   const fill=Math.exp(-(Math.pow(du(u,.49)/.11,2)+Math.pow((v-.47)/.09,2)))*.32;      // 정면 확산판(아주 부드럽게)
   const sweep=Math.exp(-Math.pow((v-.33)/.05,2))*(.5+.5*Math.cos(du(u,.5)*Math.PI*1.6))*.45*(du(u,.5)<.31?1:0);  // 상단 스윕(렌즈에 위→아래 부드러운 그라데이션)
-  const rgb=[ambient+topBox*.99+keyL*.985+rimR*1.02+fill+sweep,ambient+topBox+keyL+rimR+fill+sweep,ambient+topBox*1.02+keyL*1.03+rimR*.97+fill+sweep];
+  const rgb=[ambient+topBox*.99+keyL*.985+rimR*1.02+fill+sweep+octa,ambient+topBox+keyL+rimR+fill+sweep+octa,ambient+topBox*1.02+keyL*1.03+rimR*.97+fill+sweep+octa];
   const e=Math.ceil(Math.log2(Math.max(...rgb))),scale=256/Math.pow(2,e);for(let c=0;c<3;c++)a[i+c]=Math.min(255,Math.round(rgb[c]*scale));a[i+3]=e+128;}
  // RGBE8 has no float upload/filter extension dependency. r128 PMREM preserves RGBE encoding.
  const tex=new THREE.DataTexture(a,W,H,THREE.RGBAFormat,THREE.UnsignedByteType);tex.encoding=THREE.RGBEEncoding;tex.minFilter=tex.magFilter=THREE.NearestFilter;tex.mapping=THREE.EquirectangularReflectionMapping;tex.needsUpdate=true;
