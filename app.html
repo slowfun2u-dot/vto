@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.6.5";
+const APP_VERSION="v2.6.6";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -4121,7 +4121,7 @@ function installTrackingFade(){
  sh.vertexShader=(m.userData.temple?'attribute float arDepth;\n':'')+'varying float vTempleDepth;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvTempleDepth='+(m.userData.temple?'arDepth':'0.')+';');
  sh.fragmentShader='uniform sampler2D trackBg;uniform vec2 trackRes;uniform float trackOpacity,templeFade,templeStart,templeEnd,partOpacity,cameraMatch,cameraNoise,noiseTime;varying float vTempleDepth;\n'+sh.fragmentShader;
  sh.fragmentShader=sh.fragmentShader.replace('#include <clipping_planes_fragment>',`#include <clipping_planes_fragment>
- float coverage=partOpacity*(1.-templeFade*smoothstep(templeStart,templeStart+1.2,vTempleDepth));   // 귀 쪽 팁: 반투명 페이드 대신 시작 지점에서 깔끔히 잘라냄(1.2mm 안티앨리어싱)
+ float coverage=partOpacity*(1.-templeFade*smoothstep(templeStart,templeEnd,vTempleDepth));   // 귀 쪽 팁: 반투명 페이드 대신 시작 지점에서 깔끔히 잘라냄(1.2mm 안티앨리어싱)
  if(coverage<.004)discard;`);
  sh.fragmentShader=sh.fragmentShader.replace('#include <encodings_fragment>',`vec3 bg=sRGBToLinear(texture2D(trackBg,gl_FragCoord.xy/trackRes)).rgb;
  ${m.userData.role==='lens'?'':'gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*.97+vec3(.0015),cameraMatch);'}
@@ -4135,6 +4135,8 @@ function updatePartVisibility(){
  if(!glasses)return;const yaw=pose?Math.asin(clamp(pose.fwd.x,-1,1)):0;
  glasses.traverse(o=>{if(!o.isMesh)return;const m=o.material,u=m.userData.trackUniforms;if(!u)return;
  u.templeFade.value=mode==='ar'&&$('templeFade').checked&&m.userData.temple?1:0;
+ // 고개를 돌리면 템플을 최대 30mm 더 보여주고, 끝은 14mm 그라데이션으로 자연스럽게 사라짐. 정면은 기존처럼 깔끔한 컷
+ if(m.userData.temple){const k=THREE.MathUtils.smoothstep(Math.abs(yaw),.10,.45);const base=(P.fit.templeFadeStartMm??107);u.templeStart.value=base+30*k;u.templeEnd.value=u.templeStart.value+(1.2+12.8*k);}
  u.cameraMatch.value=mode==='ar'?settings.cameraMatch:0;u.cameraNoise.value=look.noise;u.noiseTime.value=Math.floor(performance.now()/50);u.partOpacity.value=1;
  if(mode==='ar'&&$('farTemple').checked&&m.userData.temple){const side=/_L/.test(o.name)?-1:1;u.partOpacity.value=1-THREE.MathUtils.smoothstep(side*yaw,.18,.42);}
  if(o.userData.padPart)o.visible=$('padMode').value!=='photo';
