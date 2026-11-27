@@ -95,7 +95,7 @@ header .logo{font-weight:800;letter-spacing:.08em;font-size:15px}header .ic{disp
       '.lk-vto:before{content:"";position:absolute;inset:-6px;border-radius:50%;border:1.5px solid rgba(214,178,107,.55);animation:lkPulse 2.4s ease-out infinite}'+
       '@keyframes lkPulse{0%{transform:scale(.92);opacity:.9}70%{transform:scale(1.18);opacity:0}100%{opacity:0}}'+
       '@media (prefers-reduced-motion:reduce){.lk-vto:before{animation:none;opacity:.5}}'+
-      '.lk-vto-float{position:absolute;right:14px;bottom:30px;z-index:20}'+
+      '.lk-vto-float{position:absolute;right:14px;bottom:-30px;z-index:20}'+   // 이미지 하단 경계에 걸치게(상품 이미지 가리지 않음)
       '.lk-vto-block{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 0 26px}'+
       '.lk-vto-block .lk-vto{width:100px;height:100px}.lk-vto-block .lk-vto svg{width:28px;height:14px}.lk-vto-block .lk-vto span.t{font-size:13.5px}.lk-vto-block .lk-vto b{font-size:11.5px}'+
       '.lk-vto-cap{font-size:12px;color:#777;letter-spacing:-.01em}';
@@ -106,7 +106,7 @@ header .logo{font-weight:800;letter-spacing:.08em;font-size:15px}header .ic{disp
     // ① 메인 이미지 영역(Cafe24 스킨 후보 → 시뮬 .slider)
     var mainSel = ['.xans-product-image .keyImg', '.keyImg', '.xans-product-image .thumbnail', '.xans-product-image .prdImg', '.detailArea .imgArea', '.slider'];
     var host = null; for (var i = 0; i < mainSel.length && !host; i++) host = document.querySelector(mainSel[i]);
-    if (host) { if (getComputedStyle(host).position === 'static') host.style.position = 'relative'; var f = badge(); f.classList.add('lk-vto-float'); host.appendChild(f); }
+    if (host) { if (getComputedStyle(host).position === 'static') host.style.position = 'relative'; host.style.overflow = 'visible'; var f = badge(); f.classList.add('lk-vto-float'); host.appendChild(f); }
     // ② 상세 정면 이미지 하단: 상세 본문 안 첫 상품 정면 이미지(파일명 Detail/front 우선, 없으면 첫 큰 이미지)
     var detSel = ['#prdDetail', '.xans-product-detail .cont', '.prdDetail', 'section.detail'], det = null;
     for (var j = 0; j < detSel.length && !det; j++) det = document.querySelector(detSel[j]);
