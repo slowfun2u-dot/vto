@@ -257,12 +257,12 @@
    145
   ],
   "img": "assets/SF1098SLBK-001-58/thumb.jpg",
-  "glb": "assets/SF1098SLBK-001-58/model.glb?v=267e",
+  "glb": "assets/SF1098SLBK-001-58/model.glb?v=268",
   "fit": {
    "faceWidthMm": 153,
    "up": -15,
    "fwd": 14,
-   "tiltDeg": 9.0,
+   "tiltDeg": 10.0,
    "templeFadeStartMm": 107,
    "templeFadeEndMm": 137,
    "padAnchorsMm": [
@@ -330,7 +330,7 @@
    "productNo": 2632,
    "design": "SF-2830S_Detail.pdf",
    "material": "ZYL",
-   "nosePad": "clear grey upright fin 1.8mm, 6mm projection, JJ sketch side profile"
+   "nosePad": "clear grey upright fin"
   },
   "similar": [
    "SF1096SLBK-001-58",
@@ -346,12 +346,12 @@
    145
   ],
   "img": "assets/SD6083-1-001-52/thumb.jpg",
-  "glb": "assets/SD6083-1-001-52/model.glb?v=11271653",
+  "glb": "assets/SD6083-1-001-52/model.glb?v=11271707",
   "fit": {
    "faceWidthMm": 153,
    "up": -15,
    "fwd": 14,
-   "tiltDeg": 8.0,
+   "tiltDeg": 9.0,
    "templeFadeStartMm": 107,
    "templeFadeEndMm": 137,
    "templeBendMm": 102.0,
