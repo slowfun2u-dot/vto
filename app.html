@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.5.5";
+const APP_VERSION="v2.6.0";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3980,17 +3980,21 @@ function makeEnvironment(){
  const du=(u,c)=>{let d=Math.abs(u-c);return Math.min(d,1-d);};
  function ellipse(u,v,cx,cy,rx,ry,feather){const r=Math.hypot(du(u,cx)/rx,(v-cy)/ry);return 1-sm(1-feather,1+feather,r);}
  function strip(u,v,cx,cy,w,len,taper){const x=du(u,cx)/w,y=Math.abs(v-cy)/len;const across=Math.exp(-x*x*1.6);const along=1-sm(1-taper,1,y);return across*along*(.55+.45*Math.cos(Math.min(1,y)*Math.PI*.5));}
+ // 좌표: three.js equirect — 카메라 방향(+z) = u .75, 왼쪽(-x) = u 1.0/0, 오른쪽(+x) = u .5, v 0 = 아래 · 1 = 위
+ const CU=.75;
+ const arcF=(u,v,cu,cv,R0,w,a0,a1)=>{let dx=u-cu;if(dx>.5)dx-=1;if(dx<-.5)dx+=1;dx*=2;const dy=v-cv,r=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);let k=0;if(ang>=a0&&ang<=a1){k=Math.sin((ang-a0)/(a1-a0)*Math.PI);}return Math.exp(-Math.pow((r-R0)/w,2))*k;};
  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const u=x/W,v=y/H,i=(y*W+x)*4;
-  const ambient=.028+.05*(1-v)+.035*sm(.62,.95,v);                                   // 위는 살짝 밝게, 바닥 반사 그라데이션
-  const topBox=ellipse(u,v,.50,.19,.20,.075,.40)*(3.4+2.6*Math.exp(-(Math.pow(du(u,.5)/.07,2)+Math.pow((v-.19)/.03,2))));  // 타원 소프트박스 + 중앙 핫스팟
-  // 좌 키 / 우 림: 직선 스트립 대신 호(arc) 라이트 — 구면 렌즈에 휘어진 하이라이트가 맺혀 곡률이 읽힌다
-  const arc=(cu,cv,R0,w,a0,a1)=>{const dx=(u-cu+(u-cu>.5?-1:u-cu<-.5?1:0))*2,dy=v-cv,r=Math.hypot(dx,dy),ang=Math.atan2(dy,dx);let k=0;if(ang>=a0&&ang<=a1){const m=(ang-a0)/(a1-a0);k=Math.sin(m*Math.PI);}return Math.exp(-Math.pow((r-R0)/w,2))*k;};
-  const keyL=arc(.33,.44,.19,.02,Math.PI*.62,Math.PI*1.38)*2.6+arc(.33,.44,.19,.02,-Math.PI*1.38,-Math.PI*.62)*2.6;
-  const rimR=0;
-  const octa=ellipse(u,v,.40,.30,.028,.05,.5)*5.0;   // 원형 옥타박스 — 렌즈 좌상단에 둥근 하이라이트(볼록감)
-  const fill=Math.exp(-(Math.pow(du(u,.49)/.11,2)+Math.pow((v-.47)/.09,2)))*.32;      // 정면 확산판(아주 부드럽게)
-  const sweep=Math.exp(-Math.pow((v-.33)/.05,2))*(.5+.5*Math.cos(du(u,.5)*Math.PI*1.6))*.45*(du(u,.5)<.31?1:0);  // 상단 스윕(렌즈에 위→아래 부드러운 그라데이션)
-  const rgb=[ambient+topBox*.99+keyL*.985+rimR*1.02+fill+sweep+octa,ambient+topBox+keyL+rimR+fill+sweep+octa,ambient+topBox*1.02+keyL*1.03+rimR*.97+fill+sweep+octa];
+  const ambient=.025+.045*v+.02*(1-sm(.0,.35,v));                                  // 위로 갈수록 밝은 스튜디오 공간 + 바닥 반사 약간
+  const sbox=(cu,cv,rx,ry,n,f)=>{const r=Math.pow(Math.pow(du(u,cu)/rx,n)+Math.pow(Math.abs(v-cv)/ry,n),1/n);return 1-sm(1-f,1+f,r);};
+  // ① 키 소프트박스: 카메라 바로 위, 둥근 모서리 창 — 볼록 렌즈 상단에 휘어진 창 반사(제품컷의 핵심). 박스 상부가 더 밝음
+  const win=sbox(CU,.50,.042,.055,2.4,.18)*(3.0+2.6*sm(.46,.58,v));
+  // ② 하단 반사판: 렌즈 하단을 은은하게 받쳐줌
+  const card=sbox(CU,.39,.12,.03,3,.5)*.35;
+  // ③ 오버헤드 대형 소프트박스: 프레임 상단 모서리에 길고 부드러운 하이라이트
+  const top=ellipse(u,v,CU,.86,.20,.08,.45)*2.4;
+  // ④ 좌측 스트립(곡선): 측면 각도에서 프레임·렌즈 측면에 휘어진 하이라이트
+  const keyL=arcF(u,v,.95,.55,.16,.02,Math.PI*.62,Math.PI*1.38)*2.2+arcF(u,v,.95,.55,.16,.02,-Math.PI*1.38,-Math.PI*.62)*2.2;
+  const L=ambient+win+card+top+keyL;const rgb=[L*.99,L,L*1.02];
   const e=Math.ceil(Math.log2(Math.max(...rgb))),scale=256/Math.pow(2,e);for(let c=0;c<3;c++)a[i+c]=Math.min(255,Math.round(rgb[c]*scale));a[i+3]=e+128;}
  // RGBE8 has no float upload/filter extension dependency. r128 PMREM preserves RGBE encoding.
  const tex=new THREE.DataTexture(a,W,H,THREE.RGBAFormat,THREE.UnsignedByteType);tex.encoding=THREE.RGBEEncoding;tex.minFilter=tex.magFilter=THREE.NearestFilter;tex.mapping=THREE.EquirectangularReflectionMapping;tex.needsUpdate=true;

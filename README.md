@@ -1,4 +1,4 @@
-# LOOKOPTICS AR v2.5.5
+# LOOKOPTICS AR v2.6.0
 
 v2.1 리뷰의 보완 항목을 반영한 최종본. 구조(세션 토큰·추론 watchdog·sRGB 색 파이프라인·468점 오클루더·RGBE 환경맵·재질 JSON)는 v2.1 그대로 유지.
 
@@ -10,6 +10,9 @@ assets/LK-S001/         SKU별 자산
   model.glb  thumb.jpg  ao_front.png  ao_temple_l.png  ao_temple_r.png  front_tex.jpg  pad_l.png  pad_r.png
 ```
 GitHub 업로드 시 `assets` 폴더째 올린다(upload 화면에 폴더 드래그 가능). 새 SKU는 `assets/<SKU>/` 폴더와 `CATALOG` 항목 하나를 추가하면 된다.
+
+## v2.6.0
+- 스튜디오 조명 재배치(카메라 기준 좌표 u=.75로 정정): 카메라 정면 둥근 키 소프트박스 + 하단 반사판 + 오버헤드 소프트박스 + 좌측 곡선 스트립. 렌즈 4 base 곡면에 소프트박스 창이 비치고 얼굴 각도에 따라 이동.
 
 ## v2.5.5
 - 오른쪽 호(arc) 림 라이트 제거.
