@@ -3836,7 +3836,7 @@ button{font:inherit;border:0;cursor:pointer;-webkit-tap-highlight-color:transpar
 
 </script>
 <script>
-const APP_VERSION="v2.6.4";
+const APP_VERSION="v2.6.5";
 // ---- 앱 내부 브라우저(웹뷰) 탈출: 카메라가 막히는 웹뷰에서는 기본 브라우저로 같은 주소를 연다.
 //  카카오톡: kakaotalk://web/openExternal (iOS·Android)  ·  라인: ?openExternalBrowser=1  ·  그 외 Android: Chrome intent  ·  그 외 iOS(인스타·페북): 수단 없음 → 안내
 const UA=navigator.userAgent;const IN_APP=/KAKAOTALK|Instagram|FBAN|FBAV|NAVER\(inapp|Line\//i.test(UA);const IS_ANDROID=/Android/i.test(UA);
@@ -3991,9 +3991,9 @@ function makeEnvironment(){
   // ② 하단 반사판: 렌즈 하단을 은은하게 받쳐줌
   const card=0;
   // 상부 확산광: 고개를 들면(렌즈 법선이 위로) 렌즈 위쪽에 넓고 부드럽게 번지는 빛. 경계가 보이지 않도록 큰 페더
-  const dome=ellipse(u,v,CU,.70,.22,.10,.85)*1.6;
+  const dome=ellipse(u,v,CU,.70,.17,.08,.50)*1.9;
   // ③ 오버헤드 대형 소프트박스: 프레임 상단 모서리에 길고 부드러운 하이라이트
-  const top=ellipse(u,v,CU,.86,.22,.09,.85)*2.0;
+  const top=ellipse(u,v,CU,.86,.20,.085,.60)*2.2;
   // ④ 좌측 스트립(곡선): 측면 각도에서 프레임·렌즈 측면에 휘어진 하이라이트
   const keyL=arcF(u,v,.95,.55,.16,.02,Math.PI*.62,Math.PI*1.38)*2.2+arcF(u,v,.95,.55,.16,.02,-Math.PI*1.38,-Math.PI*.62)*2.2;
   const L=ambient+win+card+dome+top+keyL;const rgb=[L*.99,L,L*1.02];
